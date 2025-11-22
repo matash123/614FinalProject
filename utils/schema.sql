@@ -16,6 +16,8 @@ DROP TABLE IF EXISTS payment;
 DROP TABLE IF EXISTS reservation;
 DROP TABLE IF EXISTS customer;
 DROP TABLE IF EXISTS flight;
+DROP TABLE IF EXISTS airline;
+DROP TABLE IF EXISTS ariline_flight;
 
 PRAGMA foreign_keys = ON;
 
@@ -57,12 +59,14 @@ CREATE TABLE payment (
 
 CREATE TABLE airline (
     airline_id TEXT PRIMARY KEY
-)
+);
 
 CREATE TABLE ariline_flight (
-    flight_id TEXT FOREIGN KEY (flight_id) REFERENCES flight(flight_id)
-    airline_id TEXT FOREIGN KEY (airline_id) REFERENCES airline_id(airline_id)
-)
+    airline_id TEXT NOT NULL,
+    flight_id TEXT NOT NULL, 
+    FOREIGN KEY (flight_id) REFERENCES flight(flight_id),
+    FOREIGN KEY (airline_id) REFERENCES airline(airline_id)
+);
 
 
 
