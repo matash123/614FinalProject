@@ -1,19 +1,47 @@
 package src.controllers;
 
-import javax.swing.*;
-import src.views.MainFrame;
-import src.config.envLoader;
+import src.AppActions;
+import src.AppView;
+import src.models.User;
+import src.schemas.loginResult;
+import src.database.userCRUD;
+import src.controllers.*;
 
 
-public class AppController {
-    private MainFrame frame;
+
+public class AppController implements AppActions {
+
+    private AppView view;
+    private final UserController userController = new UserController();
+
+
+    public void setView(AppView view) {
+        this.view = view;
+    }
 
     public void start() {
-        frame = new MainFrame();
-        frame.setVisible(true);
+        view.showLogin();
     }
 
-    public AppController(){
-        System.out.println(envLoader.get("DB_PATH"));
+@Override
+public loginResult onLoginAttempt(String username, String password) {
+    loginResult rslt = userController.attemptLogin(username, password);
+    if(rslt.success()){
+        onLoginSuccess(rslt.user());
     }
+    return rslt;
+}
+
+@Override
+public void onLoginSuccess(User user) {
+    //set active user as user;
+
+    switch (user.getRole()) {
+        case "CUSTOMER" -> view.showCustomer();
+        case "AGENT"    -> view.showAgent();
+        case "ADMIN"    -> view.showAdmin();
+    }
+}
+
+
 }

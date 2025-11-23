@@ -1,0 +1,60 @@
+classDiagram
+    direction LR
+
+    class MainApp {
+        +main()
+    }
+
+    class UIFactory {
+        +createApp() AppController
+    }
+
+    class AppActions {
+        <<interface>>
+        +handleLogin(username, password)
+    }
+
+    class AppView {
+        <<interface>>
+        +showLogin()
+        +showCustomer()
+        +showAgent()
+        +showAdmin()
+        +showError(msg)
+    }
+
+    class AppController {
+        -AppView view
+        +setView(v)
+        +start()
+        +handleLogin(u,p)
+    }
+
+    class MainFrame {
+        <<Swing JFrame>>
+        +showLogin()
+        +showCustomer()
+        +showAgent()
+        +showAdmin()
+        +showError(msg)
+    }
+
+    class LoginPanel {
+        <<Swing JPanel>>
+    }
+
+    class PlaceholderPanel {
+        <<Swing JPanel>>
+    }
+
+    %% RELATIONSHIPS
+    MainApp --> UIFactory : calls
+    UIFactory --> AppController : creates
+    UIFactory --> MainFrame : creates
+
+    AppController ..|> AppActions
+    MainFrame ..|> AppView
+
+    LoginPanel --> AppActions : callbacks
+    AppController --> AppView : UI commands
+    MainFrame --> LoginPanel : contains

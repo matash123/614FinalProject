@@ -1,31 +1,39 @@
 package src.views;
 
-import javax.swing.JFrame;
-import src.components.*;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import java.awt.CardLayout;
+import javax.swing.*;
+import java.awt.*;
 
-public class MainFrame extends JFrame {
+import src.AppView;
+import src.AppActions;
+import src.controllers.*;
 
-    private JPanel cards;
+import src.views.*;
+public class MainFrame extends JFrame implements AppView {
 
-    public MainFrame() {
+    private final CardLayout layout;
+    private final JPanel cards;
+
+    public MainFrame(AppActions actions) {
         super("Flight Reservation System");
 
-        cards = new JPanel(new CardLayout());
+        this.layout = new CardLayout();
+        this.cards = new JPanel(layout);
 
-        cards.add(new LoginPanel(), "LOGIN");
+        cards.add(new LoginPanel(actions), "LOGIN");
+        cards.add(new PlaceholderPanel("Customer View (TODO)"), "CUSTOMER");
+        cards.add(new PlaceholderPanel("Agent View (TODO)"), "AGENT");
+        cards.add(new PlaceholderPanel("Admin View (TODO)"), "ADMIN");
 
-        add(cards);
+        setContentPane(cards);
 
-        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
         setLocationRelativeTo(null);
     }
 
-    public void showView(String name) {
-        CardLayout cl = (CardLayout) cards.getLayout();
-        cl.show(cards, name);
-    }
+    @Override public void showLogin()     { layout.show(cards, "LOGIN"); }
+    @Override public void showCustomer()  { layout.show(cards, "CUSTOMER"); }
+    @Override public void showAgent()     { layout.show(cards, "AGENT"); }
+    @Override public void showAdmin()     { layout.show(cards, "ADMIN"); }
+
 }

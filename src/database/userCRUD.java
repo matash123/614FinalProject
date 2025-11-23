@@ -3,9 +3,10 @@ package src.database;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Connection;
 
-import src.entities.User;
+import src.models.User;
+
+import java.sql.Connection;
 
 
 
