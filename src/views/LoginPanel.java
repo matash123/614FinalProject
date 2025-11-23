@@ -46,8 +46,5 @@ public class LoginPanel extends JPanel {
             errorLabel.setText(result.message());
             return;     // stay here
         }
-
-        // SUCCESS
-        actions.onLoginSuccess(result.user());
     }
 }

@@ -32,7 +32,7 @@ public loginResult onLoginAttempt(String username, String password) {
     return rslt;
 }
 
-@Override
+
 public void onLoginSuccess(User user) {
     //set active user as user;
 
