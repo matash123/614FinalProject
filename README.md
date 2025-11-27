@@ -16,3 +16,23 @@ There are two Options:
  2.1 `cd {yourPath}/614Projects`
  2.2 `chmod +x run.sh` -> only on git pulls and if you change the run file
  2.3 `./run.sh`
+ 
+ 
+Flight booking application prototype
+#Marley Test
+#Test Again
+
+### actives work
+
+#### matin
+- init work on controllers
+
+#### marley
+- init work on classes / domain & database lead
+
+#### Barrett
+- Init work on the GUI
+
+
+#### Raman
+- Managing diagrams and overall design. 
