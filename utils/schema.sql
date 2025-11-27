@@ -4,7 +4,7 @@
 -- Full reset + schema + test data
 
 -- LOAD WITH -------
--- sqlite3 flights.db < utils/schema.sql
+-- sqlite3 flights.db < utils/schema.sql    -- 
 --------------------
 
 
@@ -16,6 +16,10 @@ DROP TABLE IF EXISTS customer;
 DROP TABLE IF EXISTS flight;
 DROP TABLE IF EXISTS airline;
 DROP TABLE IF EXISTS ariline_flight;
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS sysadmin;
+DROP TABLE IF EXISTS agent;
+DROP TABLE IF EXISTS customer;
 
 PRAGMA foreign_keys = ON;
 
@@ -36,10 +40,27 @@ CREATE TABLE flight (
     
 );
 
+CREATE TABLE user (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL, 
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('customer', 'agent', 'admin'))
+);
+
 CREATE TABLE customer (
-    customer_id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL
+    id TEXT NOT NULL,
+    FOREIGN KEY (id) REFERENCES user(id)
+);
+
+CREATE TABLE agent (
+    id TEXT NOT NULL,
+    FOREIGN KEY (id) REFERENCES user(id)
+);
+
+CREATE TABLE sysadmin (
+    id TEXT NOT NULL,
+    FOREIGN KEY (id) REFERENCES user(id)
 );
 
 CREATE TABLE reservation (
@@ -47,7 +68,7 @@ CREATE TABLE reservation (
     customer_id TEXT NOT NULL,
     flight_id TEXT NOT NULL,
     status TEXT NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
+    FOREIGN KEY (customer_id) REFERENCES user(id),
     FOREIGN KEY (flight_id) REFERENCES flight(flight_id)
 );
 
@@ -69,6 +90,15 @@ CREATE TABLE airline (
 -- TEST DATA
 --------------------------------------------------
 
+-- Users
+INSERT INTO user VALUES 
+('0','timmy', 'kingTimmy', '1', 'customer'),
+('1','jeff', 'kingJeff', '1', 'customer'),
+('2','sarah', 'queenSarah', '1', 'agent'),
+('3','robot', 'kingRobot', '1', 'agent'),
+('4','sam', 'queenSam', '1', 'admin'),
+('5','leroy', 'leroyJenkins', '1', 'admin');
+
 -- airlines
 INSERT INTO airline VALUES
 ('WSJ'),
@@ -82,17 +112,12 @@ INSERT INTO flight VALUES
 ('FL300', 'ACN','Montreal',    'Chicago',    '2025-12-10', 150, 220.00),
 ('FL400', 'FLR','Edmonton',    'Calgary',    '2025-12-15',  80, 129.99);
 
--- Customers
-INSERT INTO customer VALUES
-('C001', 'John Smith',        'john@example.com'),
-('C002', 'Alice Doe',         'alice@example.com'),
-('C003', 'Michael Johnson',   'mjohnson@example.com');
 
 -- Reservations
 INSERT INTO reservation VALUES
-('R001', 'C001', 'FL100', 'booked'),
-('R002', 'C002', 'FL200', 'booked'),
-('R003', 'C003', 'FL300', 'cancelled');
+('R001', '1', 'FL100', 'booked'),
+('R002', '1', 'FL200', 'booked'),
+('R003', '2', 'FL300', 'cancelled');
 
 -- Payments
 INSERT INTO payment VALUES
