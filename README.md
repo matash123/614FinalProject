@@ -2,7 +2,7 @@
 
 # Setup
 1. `cd {yourPath}/614Projects`
-2. init database `sqlite3 flights.db < utils/schema.sql`
+2. init database `sqlite3 flights.db < utils/schema.sql` for windows -> `sqlite3 mydatabase.db ".read utils/schema.sql"`
 3. create ".env" file and add  "DB_PATH=flights.db" without quotations.  
 
 # How to run
