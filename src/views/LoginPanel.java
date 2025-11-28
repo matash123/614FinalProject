@@ -29,6 +29,10 @@ public class LoginPanel extends MainPanel {
         userField = new JTextField();
         passField = new JPasswordField();
         loginButton = new JButton("Login");
+        loginButton.setFocusPainted(false);
+        loginButton.setContentAreaFilled(false);
+        loginButton.setOpaque(true);               
+        loginButton.setBorderPainted(false); 
 
         loginButton.addActionListener(e -> {
             var u = userField.getText();
@@ -37,6 +41,10 @@ public class LoginPanel extends MainPanel {
         });
 
         themeButton = new JButton("Switch Theme");
+        themeButton.setFocusPainted(false);
+        themeButton.setContentAreaFilled(false);
+        themeButton.setOpaque(true);               
+        themeButton.setBorderPainted(false); 
 
 
         themeButton.addActionListener(e -> actions.switchTheme());

@@ -40,6 +40,7 @@ public loginResult onLoginAttempt(String username, String password) {
 public void onLoginSuccess(User user) {
     //set active user as user;
     mf.setView(mf.makeCustomerPanel(this));
+    mf.applyThemeToUI(this.theme);
     // switch (user.getRole()) {
     //     case "CUSTOMER" -> view.showCustomer();
     //     case "AGENT"    -> view.showAgent();
