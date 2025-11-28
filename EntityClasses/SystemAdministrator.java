@@ -1,6 +1,7 @@
 package domain;
 
 /**
+ * Class System Administrator
  * This inherits from User, and respresents one of the 3 child classes -> System Administrator,
  * This is the class with the most access and functionality
  */
