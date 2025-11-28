@@ -47,7 +47,7 @@ public class MainFrame extends JFrame implements AppFrame {
     }
 
     @Override
-    public void showLogin(AppActions actions) {
-        setView(makeLoginPanel(actions));
+    public MainPanel makeCustomerPanel(AppActions actions){
+        return new CustomerPanel(actions);
     }
 }

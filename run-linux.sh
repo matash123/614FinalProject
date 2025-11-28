@@ -20,7 +20,7 @@ if [ ! -f "$DB_FILE" ]; then
 fi
 
 # Clean + recompile
-rm -rf "$OUT"
+rm  "$OUT"
 mkdir "$OUT"
 
 # Compile all top-level and nested source files
