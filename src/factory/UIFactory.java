@@ -1,19 +1,30 @@
 package src.factory;
 
+import src.AppFrame;
+import src.config.Theme;
+import src.config.envLoader;
 import src.controllers.AppController;
 import src.views.MainFrame;
-import src.AppActions;
-import src.AppView;
+
 
 public class UIFactory {
 
     public static AppController createApp() {
-        AppController controller = new AppController();
+        
+        String envTheme = envLoader.get("DEFAULT_THEME");
+        Theme defaultTheme = Theme.LIGHT;
 
-        AppActions actions = controller;     // controller handles UI callbacks
-        AppView view = new MainFrame(actions);  // main window implements AppView
+        if(envTheme.equals("DARK")){
+            defaultTheme = Theme.DARK;
+        }
 
-        controller.setView(view);
+
+        System.out.println("Building App with default theme as " + envTheme);
+
+        AppController controller = new AppController(defaultTheme);
+        AppFrame view = new MainFrame(); 
+
+        controller.setMainFrame(view);
 
         if (view instanceof java.awt.Component c) {
             c.setVisible(true);
