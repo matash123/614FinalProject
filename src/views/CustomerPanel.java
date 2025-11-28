@@ -1,126 +1,124 @@
 package src.views;
 
-import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import javax.swing.*;
 import src.AppActions;
+import src.components.BookingList;
+import src.components.ThemeAware;
+import src.components.UserBox;
+import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
 
+
 /**
- * CustomerPanel – the main customer dashboard.
- * Shows: search flights, book/cancel/modify bookings, view history.
+ * CustomerDashboard – full user dashboard with:
+ * - Top header: user info + booking list
+ * - Center dynamic area
  */
 public class CustomerPanel extends MainPanel {
 
     private final AppActions actions;
 
-    private JLabel title;
-    private JTextField originField, destField, dateField;
-    private JButton searchBtn, bookBtn, cancelBtn, modifyBtn, historyBtn;
+    // Core UI elements
+    private JPanel headerPanel;
+    private UserBox userBox;
+    private BookingList bookingList;
 
-    private JTable resultsTable;
-    private JScrollPane resultsScroll;
+
+    private JPanel activeArea;
 
     public CustomerPanel(AppActions actions) {
         this.actions = actions;
 
         setLayout(new BorderLayout());
+        buildHeader();
+        buildActiveArea();
 
-        // --- Top Title ---
-        title = new JLabel("Customer Dashboard", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 22));
-        add(title, BorderLayout.NORTH);
+        // Temporary placeholder initialization until actions layer is ready
+        userBox.setUser("John Doe", "john@example.com", "CUSTOMER");
+        bookingList.setBookings(List.of(
+            "YYC → YVR | 2025-12-01",
+            "YYC → LAX | 2025-12-10",
+            "YVR → NRT | 2026-01-03"
+        ));
 
-        // --- Search Form Panel ---
-        JPanel searchPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(6, 6, 6, 6);
-        c.fill = GridBagConstraints.HORIZONTAL;
-
-        originField = new JTextField();
-        destField = new JTextField();
-        dateField = new JTextField();
-
-        searchBtn = new JButton("Search Flights");
-
-        c.gridy = 0; c.gridx = 0; searchPanel.add(new JLabel("Origin:"), c);
-        c.gridx = 1; searchPanel.add(originField, c);
-
-        c.gridy = 1; c.gridx = 0; searchPanel.add(new JLabel("Destination:"), c);
-        c.gridx = 1; searchPanel.add(destField, c);
-
-        c.gridy = 2; c.gridx = 0; searchPanel.add(new JLabel("Date (YYYY-MM-DD):"), c);
-        c.gridx = 1; searchPanel.add(dateField, c);
-
-        c.gridy = 3; c.gridx = 0; c.gridwidth = 2;
-        searchPanel.add(searchBtn, c);
-
-        add(searchPanel, BorderLayout.WEST);
-
-        // --- Flight Results Table ---
-        resultsTable = new JTable(); // placeholder; controller fills model
-        resultsScroll = new JScrollPane(resultsTable);
-        add(resultsScroll, BorderLayout.CENTER);
-
-        // --- Action Buttons ---
-        JPanel actionPanel = new JPanel(new GridLayout(4, 1, 10, 10));
-        bookBtn = new JButton("Book Selected Flight");
-        cancelBtn = new JButton("Cancel Reservation");
-        modifyBtn = new JButton("Modify Reservation");
-        historyBtn = new JButton("View Booking History");
-
-        actionPanel.add(bookBtn);
-        actionPanel.add(cancelBtn);
-        actionPanel.add(modifyBtn);
-        actionPanel.add(historyBtn);
-
-        add(actionPanel, BorderLayout.EAST);
-
-        // --- Callbacks (to controller) ---
-        searchBtn.addActionListener(e -> {
-            // actions.onCustomerSearch(originField.getText(), destField.getText(), dateField.getText());
-        });
-
-        bookBtn.addActionListener(e -> {
-            // int row = resultsTable.getSelectedRow();
-            // actions.onCustomerBook(row);
-        });
-
-        cancelBtn.addActionListener(e -> {
-            // actions.onCustomerCancel();
-        });
-
-        modifyBtn.addActionListener(e -> {
-            // actions.onCustomerModify();
-        });
-
-        historyBtn.addActionListener(e -> {
-            // actions.onCustomerHistory();
-        });
+        // Default content:
+        setActiveView(new FlightSearchPanel());
     }
 
+    // -------------------------------------------------------------
+    // BUILD SECTIONS
+    // -------------------------------------------------------------
+    private void buildHeader() {
+        headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setPreferredSize(new Dimension(0, 140));
+        headerPanel.setOpaque(true);
+
+        // New modular components
+        userBox = new UserBox();
+        bookingList = new BookingList();
+
+        headerPanel.add(userBox, BorderLayout.WEST);
+        headerPanel.add(bookingList, BorderLayout.EAST);
+
+        add(headerPanel, BorderLayout.NORTH);
+    }
+
+    private void buildActiveArea() {
+        activeArea = new JPanel(new BorderLayout());
+        activeArea.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        activeArea.setOpaque(true);
+
+        JLabel placeholder = new JLabel(
+            "Select an option, flight, or task to continue.",
+            SwingConstants.CENTER
+        );
+
+        activeArea.add(placeholder, BorderLayout.CENTER);
+        add(activeArea, BorderLayout.CENTER);
+    }
+
+    // -------------------------------------------------------------
+    // DYNAMIC UPDATE METHODS
+    // -------------------------------------------------------------
+    public void setActiveView(JPanel p) {
+        activeArea.removeAll();
+        activeArea.add(p, BorderLayout.CENTER);
+        activeArea.revalidate();
+        activeArea.repaint();
+    }
+
+    public void refreshUser(String name, String email, String role) {
+        userBox.setUser(name, email, role);
+    }
+
+    public void refreshBookings(List<String> bookings) {
+        bookingList.setBookings(bookings);
+    }
+
+    // -------------------------------------------------------------
+    // THEME HANDLING
+    // -------------------------------------------------------------
     @Override
     public void refreshTheme(Theme t) {
         setBackground(t.bg);
-        title.setForeground(t.fg);
+        headerPanel.setBackground(t.bg);
+        activeArea.setBackground(t.bg);
 
-        originField.setBackground(t.inputBg);
-        originField.setForeground(t.inputFg);
-        destField.setBackground(t.inputBg);
-        destField.setForeground(t.inputFg);
-        dateField.setBackground(t.inputBg);
-        dateField.setForeground(t.inputFg);
+        // Refresh header components
+        if (userBox instanceof ThemeAware ta1) ta1.refreshTheme(t);
+        if (bookingList instanceof ThemeAware ta2) ta2.refreshTheme(t);
 
-        searchBtn.setBackground(t.buttonBg);
-        searchBtn.setForeground(t.buttonFg);
-        bookBtn.setBackground(t.buttonBg);
-        bookBtn.setForeground(t.buttonFg);
-        cancelBtn.setBackground(t.buttonBg);
-        cancelBtn.setForeground(t.buttonFg);
-        modifyBtn.setBackground(t.buttonBg);
-        modifyBtn.setForeground(t.buttonFg);
-        historyBtn.setBackground(t.buttonBg);
-        historyBtn.setForeground(t.buttonFg);
+        // Refresh active component inside activeArea
+        if (activeArea.getComponentCount() > 0) {
+            Component c = activeArea.getComponent(0);
+            if (c instanceof ThemeAware ta3) {
+                ta3.refreshTheme(t);
+            }
+        }
 
         repaint();
     }
+
 }
