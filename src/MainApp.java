@@ -1,11 +1,13 @@
 package src;
 
+import src.config.envLoader;
 import src.controllers.AppController;
 import src.factory.*;
 
 public class MainApp {
     public static void main(String[] args) {
-    AppController app = UIFactory.createApp();
-    app.start();
+        envLoader.get("DB_PATH");
+        AppController app = UIFactory.createApp();
+        app.start();
 }
 }

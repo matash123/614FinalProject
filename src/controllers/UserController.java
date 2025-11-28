@@ -1,13 +1,14 @@
 package src.controllers;
 
-import src.models.User;
 import src.database.userCRUD;
+import src.models.User;
 import src.schemas.loginResult;
 
 public class UserController {
     public UserController(){};
 
     public loginResult attemptLogin(String username, String password) {
+        System.out.println(username);
         User usr = userCRUD.getUser(username);
 
         if (usr == null)
