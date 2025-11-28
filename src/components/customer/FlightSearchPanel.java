@@ -138,17 +138,17 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
 
         return result;
     }
-
     private void updateTable(List<String[]> flights) {
         String[] cols = { "Origin", "Destination", "Date", "Airline", "Price" };
-        String[][] data = flights.toArray(new String[0][]);
+        String[][] data = flights.toArray(String[][]::new);
 
-        flightTable.setModel(new javax.swing.table.DefaultTableModel(
-                data, cols
-        ) {
+        var model = new javax.swing.table.DefaultTableModel(data, cols) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
-        });
+        };
+
+        flightTable.setModel(model);
     }
+
 
 
     private JFormattedTextField createDateField() {
