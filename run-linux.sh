@@ -21,7 +21,7 @@ fi
 
 # Clean + recompile
 rm -rf "$OUT"
-mkdir "$OUT"
+mkdir "$OUT"4
 
 # Compile all top-level and nested source files
 javac -cp "$JAR" -d "$OUT" $SRC/*.java $SRC/**/*.java
