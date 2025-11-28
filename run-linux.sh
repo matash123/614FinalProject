@@ -20,8 +20,8 @@ if [ ! -f "$DB_FILE" ]; then
 fi
 
 # Clean + recompile
-rm -rf "$OUT"
-mkdir "$OUT"4
+rm  "$OUT"
+mkdir "$OUT"
 
 # Compile all top-level and nested source files
 javac -cp "$JAR" -d "$OUT" $SRC/*.java $SRC/**/*.java
