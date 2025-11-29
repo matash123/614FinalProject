@@ -1,18 +1,17 @@
 package src.components.customer;
 
-import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.text.MaskFormatter;
 import src.AppActions;
 import src.components.ThemeAware;
 import src.config.Theme;
 import src.events.ControllerBus;
 import src.events.Observer;
 import src.models.Flight;
-import javax.swing.text.MaskFormatter;
-import javax.swing.JFormattedTextField;
-import java.text.ParseException;
 
 /**
  * Customer-facing flight search panel.

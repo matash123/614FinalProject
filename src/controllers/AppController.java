@@ -3,9 +3,9 @@ package src.controllers;
 import src.AppActions;
 import src.AppFrame;
 import src.config.Theme;
+import src.factory.ControllerFactory;
 import src.models.User;
 import src.schemas.loginResult;
-import src.factory.ControllerFactory;
 
 /**
  * Top-level application controller that receives high-level UI events

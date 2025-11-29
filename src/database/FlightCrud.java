@@ -74,7 +74,7 @@ public class FlightCrud {
                     } catch (NumberFormatException ignored) {}
                 }
 
-                //ERROR HANDLING ON DATE
+                //ERROR HANDLING ON DATE -> ASSUMING WE CANT STORE A FLIGHT 
                 LocalDate departureDate = null;
                 if (dbDate != null && !dbDate.isBlank()) {
                     // expected format: yyyy-MM-dd (matches the UI mask)
