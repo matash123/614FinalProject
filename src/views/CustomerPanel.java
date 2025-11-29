@@ -43,8 +43,9 @@ public class CustomerPanel extends MainPanel {
             "YVR → NRT | 2026-01-03"
         ));
 
-        // Default content: hook the flight search panel up to the high-level app actions
-        setActiveView(new FlightSearchPanel(actions));
+        // Default content: hook the (customer-mode) flight search panel
+        // up to the high-level app actions
+        setActiveView(new FlightSearchPanel(actions, FlightSearchPanel.Mode.CUSTOMER));
     }
 
     // -------------------------------------------------------------

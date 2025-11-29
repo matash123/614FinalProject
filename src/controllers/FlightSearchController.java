@@ -1,8 +1,10 @@
 package src.controllers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import app.AppContext;
+import src.DTO.FlightDTO;
 import src.database.RepositoryBridge;
 import src.events.ControllerBus;
 import src.strategies.SearchSortStrategy;
@@ -33,8 +35,16 @@ public class FlightSearchController {
         //applying the sort strategy
         results = sortStrategy.sort(results);
 
-        //telling everyone flights were loaded
-        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, results);
+        // Convert to DTOs for UI consumers and publish on the bus.
+        List<FlightDTO> dtoResults = results.stream()
+            .map(FlightDTO::fromModel)
+            .collect(Collectors.toList());
+
+        ControllerBus.getInstance().publish(
+            ControllerBus.EventType.FLIGHTS_LOADED,
+            dtoResults
+        );
+
         return results;
     }
 

@@ -5,6 +5,7 @@ import javax.swing.*;
 import src.AppActions;
 import src.config.Theme;
 
+
 public class LoginPanel extends MainPanel {
 
     private JLabel title, userLabel, passLabel, errorLabel;
