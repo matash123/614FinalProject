@@ -221,6 +221,113 @@ public class FlightCrud {
 
         DB.update(stmt);
     }
+
+    //Okay just realized that for reservation we want to connect this from our database to JAVA world for our Customer
+    //As the two instance of information really exist in our database under Flight and the Customer ID and both as foreign keys
+    // in reservation table as foreign keys, but now we want to build the Java object so our reservation can hold the Flight and not just the ID
+    // took a lot of brainstorming and help from ChatGPT to fully understand this, but no confident that this the best way
+    //definately learned something new and important here connecting our DB to the JAVA world.
     
+    //We had two options do this in ReservationCrud, but I believe that instead this should belong here under Flight and be
+    //accessed through our method below by reservationCrud as this logic is most similar (very very simalar) atleast how we implemented it
+    //with Search Flights, just now writing to our database this reservation.
+    
+    //Our truth will always be in the database, thats how conceptually we wanted it so we may have more than one object of the "same flight" in the
+    //Java world but thats just for GUI, we will directly referenc eour IDs and create new objects
+
+    //HINT, the reason I was so worried about this was in my design in getcapacity for seeing if there is room on a flight to book
+    //however we just need to chekc database pull from there and build a new flight object during that check based on the updated database for that customer
+    //and of course apply our control functions to check and thenw we shall no.
+
+    //Big conceptual development for me that I am proud I worked through with of course help from COURSE CONTENT and CHATGPT questions.
+
+    //THIS WILL BE USED BY RESERVATION CRUD TO have the FLIGHT OBJECT needed at time of booking to store which will include the capacity!! Key
+    //and passed there for handling and reservation and of course writing to database and updating fields
+    
+    public static Flight findFlightById(String flightId) {
+        
+        //quick check and error handling basic and same as before
+        if (flightId == null || flightId.isBlank()) {
+        throw new IllegalArgumentException("flightId is required");
+        }
+
+        //now accessing our database
+        try {
+            String sql =
+                "SELECT " +
+                "  f.flight_id      AS id, " +
+                "  f.origin         AS origin, " +
+                "  f.destination    AS destination, " +
+                "  f.date           AS date, " +
+                "  a.airline_id     AS airline_id, " +
+                "  a.name           AS airline, " +
+                "  ap.airplane_id   AS airplane_id, " +
+                "  ap.model         AS airplane_model, " +
+                "  ap.manufacturer  AS airplane_manufacturer, " +
+                "  ap.capacity      AS airplane_capacity, " +
+                "  f.price          AS price " +
+                "FROM flight f " +
+                "JOIN airline  a  ON f.airline_id  = a.airline_id " +
+                "JOIN airplane ap ON f.airplane_id = ap.airplane_id " +
+                "WHERE f.flight_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, flightId.trim());
+
+            ResultSet rs = DB.query(stmt);
+            if (!DB.next(rs)) {
+                return null; // not found
+            }
+
+            // This is almost identical to our seach flights so was just copied there
+            String id            = DB.getString(rs, "id");
+            String dbOrigin      = DB.getString(rs, "origin");
+            String dbDestination = DB.getString(rs, "destination");
+            String dbDate        = DB.getString(rs, "date");
+            String airlineName   = DB.getString(rs, "airline");
+            String airlineId     = DB.getString(rs, "airline_id");
+
+            String airplaneId       = DB.getString(rs, "airplane_id");
+            String airplaneModel    = DB.getString(rs, "airplane_model");
+            String airplaneMfg      = DB.getString(rs, "airplane_manufacturer");
+            String airplaneCapStr   = DB.getString(rs, "airplane_capacity");
+            String priceStr         = DB.getString(rs, "price");
+
+            double price = 0.0;
+            if (priceStr != null && !priceStr.isBlank()) {
+                try { price = Double.parseDouble(priceStr); } catch (NumberFormatException ignored) {}
+            }
+
+            //Reference to CHATGOT for this function to help, we made some mistakes with type and this is error handling
+            int airplaneCapacity = 0;
+            if (airplaneCapStr != null && !airplaneCapStr.isBlank()) {
+                try { airplaneCapacity = Integer.parseInt(airplaneCapStr); }
+                catch (NumberFormatException ignored) { airplaneCapacity = 150; }
+            }
+
+            LocalDate departureDate = null;
+            if (dbDate != null && !dbDate.isBlank()) {
+                departureDate = LocalDate.parse(dbDate);
+            }
+
+            Airline airline = new Airline(airlineId, airlineName);
+            Airplane airplane = new Airplane(airplaneId, airplaneModel, airplaneMfg, airplaneCapacity);
+
+            return new Flight(
+                    id,
+                    airline,
+                    dbOrigin,
+                    dbDestination,
+                    departureDate,
+                    airplane,
+                    price
+            );
+
+            //CHATGPT shoutout still have so much troubl implementing this without errors and helped get this going
+        } catch (RuntimeException e) {
+            System.err.println("Error in findFlightById: " + e.getMessage());
+            throw e;
+        }
+    }
 }
 
