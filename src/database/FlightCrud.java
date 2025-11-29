@@ -166,6 +166,7 @@ public class FlightCrud {
      * 
      */
 
+    
     //intended to be used by FLIGHT AGENT
     public static void addFlight(Flight flight) {
     if (flight == null) {
