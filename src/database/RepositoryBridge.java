@@ -86,5 +86,13 @@ public class RepositoryBridge {
     public void deleteFlight(String flightId) {
         FlightCrud.deleteFlight(flightId);
     }
+
+    public void saveReservation(FlightCustomerReservation reservation) {
+    ReservationCrud.saveReservation(reservation);
+}
+
+public List<FlightCustomerReservation> findReservationsByUserId(String userId) {
+    return ReservationCrud.findByUserId(userId);
+}
 }
 

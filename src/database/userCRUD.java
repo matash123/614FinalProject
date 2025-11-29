@@ -2,41 +2,50 @@ package src.database;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import src.models.User;
 
-import java.sql.Connection;
+public class userCRUD {
 
+    
+    //Look up an active user by username.
+     //Returns null if no user is found or an error occurs.
+    public static User getUser(String username) {
+        if (username == null || username.isBlank()) {
+            return null;
+        }
 
+        try {
+            // Now implementing the the true, 
+            String sql =
+                "SELECT id, username, password, role " +
+                "FROM user " +
+                "WHERE username = ? AND active = 1";
 
-public  class userCRUD {
-    public static User getUser(String username){
-        //all DB helper functions are wrapped to catch errors and throw  runtime exception. 
-        //Can wrap entire function into try catch blocks for a runtime error on any DB helper function.    
-        
-        try{
-            //create sql string
-            String sql = "SELECT id, userName, password, role FROM user WHERE username = ?";
-            
-            //c
             PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, username.trim());
 
-            DB.set(stmt, 1, username);
+            //pulling from the db now
             ResultSet rs = DB.query(stmt);
 
             if (DB.next(rs)) {
+                // User constructor: (userId, name, password, role). This is to match our schema exactlty
                 return new User(
                     DB.getString(rs, "id"),
-                    DB.getString(rs,"username"),
+                    DB.getString(rs, "username"),
                     DB.getString(rs, "password"),
-                    DB.getString(rs,"role")
+                    DB.getString(rs, "role")
                 );
-            } 
+            }
 
+            // Quick check than can resturn null
             return null;
-        } catch(RuntimeException e){System.err.println(e.getMessage());}
-        return null;
+        
+        //Quick runtime exception, this is a reference to CHATGPT for the idea and the help implementing
+        //This step always trips me up in writing the correct syntax
+        } catch (RuntimeException e) {
+            System.err.println("Error in userCRUD.getUser: " + e.getMessage());
+            return null;
+        }
     }
-};
-
+}
