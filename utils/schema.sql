@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS agent;
 DROP TABLE IF EXISTS customer;
 DROP TABLE IF EXISTS flight;
 DROP TABLE IF EXISTS airline;
+DROP TABLE IF EXISTS airplane; -- added airplane now.
 DROP TABLE IF EXISTS user;
 
 PRAGMA foreign_keys = ON;
@@ -58,6 +59,7 @@ CREATE TABLE airline (
 -- Flights
 CREATE TABLE flight (
     flight_id        TEXT PRIMARY KEY,     -- ↔ Flight.flightId
+    airplane_id      TEXT NOT NULL         -- Flight.airplane.airplaneID
     airline_id       TEXT NOT NULL,        -- ↔ Flight.airline.airlineId
     origin           TEXT NOT NULL,        -- ↔ Flight.origin  (or departure)
     destination      TEXT NOT NULL,        -- ↔ Flight.destination
@@ -99,6 +101,14 @@ CREATE TABLE promotion (
     end_date     TEXT NOT NULL         -- ↔ Promotion.endDate
 );
 
+CREATE TABLE airplane (
+    airplane_id  TEXT PRIMARY KEY,
+    airline_id   TEXT NOT NULL, 
+    model        TEXT NOT NULL,
+    manufacturer TEXT NOT NULL,
+    capacity     INTEGER NOT NULL
+);
+
 --------------------------------------------------
 -- TEST DATA
 --------------------------------------------------
@@ -123,12 +133,19 @@ INSERT INTO airline (airline_id, name) VALUES
 ('ACN', 'Air Canada'),
 ('FLR', 'Flair');
 
+-- Airplane
+
+INSERT INTO airplane (airplane_id, airline_id, model, manufacturer, capacity) VALUES
+('WSJ-737-1', 'WSJ', 'Boeing 737-800', 'Boeing', 160),
+('ACN-320-1', 'ACN', 'Airbus A320',    'Airbus', 180),
+('FLR-737-1', 'FLR', 'Boeing 737-700', 'Boeing', 140);
+
+
 -- Flights
-INSERT INTO flight VALUES
-('FL100', 'WSJ','Calgary',  'Vancouver', '2025-12-01', 120, 120, 199.99),
-('FL200', 'WSJ','Toronto',  'New York',  '2025-12-05', 180, 180, 249.50),
-('FL300', 'ACN','Montreal', 'Chicago',   '2025-12-10', 150, 150, 220.00),
-('FL400', 'FLR','Edmonton', 'Calgary',   '2025-12-15',  80,  80, 129.99);
+INSERT INTO flight (flight_id, airline_id, airplane_id, origin, destination, date, total_seats, available_seats, price) VALUES
+('FL100', 'WSJ', 'WSJ-737-1', 'Calgary',   'Vancouver', '2025-12-01', 160, 120, 199.99),
+('FL200', 'ACN', 'ACN-320-1', 'Calgary',   'Toronto',   '2025-12-05', 180,  50, 249.50),
+('FL300', 'FLR', 'FLR-737-1', 'Edmonton',  'Vancouver', '2025-12-10', 140, 140, 149.99);
 
 -- Reservations
 INSERT INTO reservation (reservation_id, customer_id, flight_id, seats, status, booking_time) VALUES
@@ -144,3 +161,6 @@ INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp) VALU
 -- Promotions
 INSERT INTO promotion (promotion_id, title, message, start_date, end_date) VALUES
 ('PR001', 'Winter Sale', '20% off selected flights', '2025-11-01', '2025-12-31');
+
+
+
