@@ -1,7 +1,0 @@
-package controller;
-
-//simple observer interface for gui updates
-public interface Observer {
-    void update(Object event);
-}
-

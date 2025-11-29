@@ -2,15 +2,26 @@ package src.components.customer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import src.AppActions;
 import src.components.ThemeAware;
 import src.config.Theme;
+import src.events.ControllerBus;
+import src.events.Observer;
+import src.models.Flight;
 import javax.swing.text.MaskFormatter;
 import javax.swing.JFormattedTextField;
 import java.text.ParseException;
 
-public class FlightSearchPanel extends JPanel implements ThemeAware {
+/**
+ * Customer-facing flight search panel.
+ * Delegates user actions to the high-level AppActions (AppController),
+ * and listens for FLIGHTS_LOADED events to refresh the table.
+ */
+public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
+
+    private final AppActions actions;
 
     private JTable flightTable;
     private JScrollPane tableScroll;
@@ -23,14 +34,20 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
 
     private JPanel searchBar;
 
-    public FlightSearchPanel() {
+    public FlightSearchPanel(AppActions actions) {
+        this.actions = actions;
+
         setLayout(new BorderLayout());
         setOpaque(true);
 
         buildResultsTable();
         buildSearchBar();
 
-        updateTable(getFlights());
+        // subscribe to flight search results
+        ControllerBus.getInstance().subscribe(ControllerBus.EventType.FLIGHTS_LOADED, this);
+
+        // start with an empty table
+        updateTableFromFlights(new ArrayList<>());
     }
 
     // ------------------------------------------------------------
@@ -93,60 +110,53 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         searchBar.add(searchButton, c);
 
         searchButton.addActionListener(e -> {
-            updateTable(applyFilters(getFlights()));
+            if (actions != null) {
+                String origin = originField.getText().trim();
+                String dest   = destField.getText().trim();
+                String start  = dateStartField.getText().trim();
+                String end    = dateEndField.getText().trim();
+                actions.searchFlights(origin, dest, start, end);
+            }
         });
 
         add(searchBar, BorderLayout.SOUTH);
     }
 
     // ------------------------------------------------------------
-    // DATA + FILTERING
+    // TABLE UPDATE FROM CONTROLLER EVENTS
     // ------------------------------------------------------------
-    private List<String[]> getFlights() {
-        List<String[]> flights = new ArrayList<>();
-
-        flights.add(new String[]{"YYC", "YVR", "2025-12-01", "Air Canada", "$199"});
-        flights.add(new String[]{"YYC", "LAX", "2025-12-05", "WestJet", "$249"});
-        flights.add(new String[]{"YYC", "JFK", "2025-12-07", "Delta", "$310"});
-        flights.add(new String[]{"YVR", "NRT", "2026-01-03", "ANA", "$840"});
-        flights.add(new String[]{"YYC", "SEA", "2025-11-29", "Alaska", "$180"});
-
-        return flights;
-    }
-
-    private List<String[]> applyFilters(List<String[]> flights) {
-        String origin = originField.getText().trim().toUpperCase();
-        String dest   = destField.getText().trim().toUpperCase();
-        String start  = dateStartField.getText().trim();
-        String end    = dateEndField.getText().trim();
-
-        List<String[]> result = new ArrayList<>();
-
-        for (String[] f : flights) {
-            String fOrigin = f[0];
-            String fDest   = f[1];
-            String fDate   = f[2];
-
-            if (!origin.isEmpty() && !fOrigin.contains(origin)) continue;
-            if (!dest.isEmpty()   && !fDest.contains(dest)) continue;
-
-            if (!start.isEmpty() && fDate.compareTo(start) < 0) continue;
-            if (!end.isEmpty()   && fDate.compareTo(end) > 0) continue;
-
-            result.add(f);
-        }
-
-        return result;
-    }
-    private void updateTable(List<String[]> flights) {
+    private void updateTableFromFlights(List<Flight> flights) {
         String[] cols = { "Origin", "Destination", "Date", "Airline", "Price" };
-        String[][] data = flights.toArray(String[][]::new);
+
+        String[][] data = new String[flights.size()][cols.length];
+        for (int i = 0; i < flights.size(); i++) {
+            Flight f = flights.get(i);
+            data[i][0] = f.getOrigin();
+            data[i][1] = f.getDestination();
+            data[i][2] = (f.getDate() != null) ? f.getDate().toString() : "";
+            data[i][3] = (f.getAirline() != null) ? f.getAirline().getName() : "";
+            data[i][4] = String.format("$%.2f", f.getPrice());
+        }
 
         var model = new javax.swing.table.DefaultTableModel(data, cols) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
         flightTable.setModel(model);
+    }
+
+    @Override
+    public void update(Object event) {
+        if (event instanceof List<?>) {
+            List<?> raw = (List<?>) event;
+            List<Flight> flights = new ArrayList<>();
+            for (Object o : raw) {
+                if (o instanceof Flight f) {
+                    flights.add(f);
+                }
+            }
+            updateTableFromFlights(flights);
+        }
     }
 
 
