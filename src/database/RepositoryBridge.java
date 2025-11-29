@@ -1,6 +1,9 @@
 package src.database;
 
 import java.util.List;
+
+import src.models.Airline;
+import src.models.Airplane;
 import src.models.Flight;
 import src.models.FlightCustomerReservation;
 import src.models.User;
@@ -39,5 +42,49 @@ public class RepositoryBridge {
     }
 
     //todo add more repo methods as needed
+
+    //ADDED NOW MATCHING OUR CRUD
+
+
+    //AIRLINES, this function is intened be used by SYS ADMIN
+    public void saveAirline(Airline airline) {       
+        AirlineCrud.saveAirline(airline);
+    }
+
+    // AGAIN SYS ADMIN
+    public void deleteAirline(String airlineId) {      
+        AirlineCrud.deleteAirline(airlineId);
+    }
+
+    //ALL 3 USERS SHOULD USES THIS
+    public List<Airline> findAllAirlines() {           
+        return AirlineCrud.findAll();
+    }
+
+    //AIRPLANES
+
+    //This is again intened by SYS ADMIN
+    public void addAirplane(Airplane airplane, String airlineId) {
+        AirplaneCrud.addAirplane(airplane, airlineId);
+    }
+
+    //again SYTEM ADMIN
+    public void deleteAirplane(String airplaneId) {    
+        AirplaneCrud.deleteAirplane(airplaneId);
+    }
+
+    //ALL 3 users will be able to see airplane, actually maybe custome prolly wont use this, but we will get to that in controller
+    public List<Airplane> findAllAirplanes() {        
+        return AirplaneCrud.findAll();
+    }
+
+    // ADD FLIGHTS, and DELETE, intended to be used and controlled by FLIGHT AGENT in their controller
+    public void addFlight(Flight flight) {
+        FlightCrud.addFlight(flight);
+    }
+
+    public void deleteFlight(String flightId) {
+        FlightCrud.deleteFlight(flightId);
+    }
 }
 
