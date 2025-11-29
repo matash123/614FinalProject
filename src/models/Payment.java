@@ -1,4 +1,4 @@
-package domain;
+package src.models;
 
 import java.time.LocalDateTime;
 
@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 public class Payment {
 
     private final String paymentId;   // PK
-    private Reservation reservation;
+    private FlightCustomerReservation reservation;
     private double amount;
     private PaymentStatus status;
     private LocalDateTime timestamp;
 
     public Payment(String paymentId,
-                   Reservation reservation,
+                   FlightCustomerReservation reservation,
                    double amount,
                    PaymentStatus status,
                    LocalDateTime timestamp) {
@@ -31,7 +31,7 @@ public class Payment {
         return paymentId;
     }
 
-    public Reservation getReservation() {
+    public FlightCustomerReservation getReservation() {
         return reservation;
     }
 

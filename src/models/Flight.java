@@ -1,4 +1,4 @@
-package domain;
+package src.models;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -11,13 +11,13 @@ public class Flight {
 
     private final String flightId;     // This is our primary key of the Flight
     private Airline airline;           // Each Flight should belong to an airline, this can be removed if we hold an Airpline object which holds an Airpline (should come back to this)
-    private String departure;             // These are good and should stay I believe.
-    private String destination;        // These are good and should stay I believe.
-    private LocalDate date;            // These are good and should stay I believe.
-    private int totalSeats;            // This comes from the airplane, that is assigned to this flight we should probably just get this directly from the airplane we hold
+    private String origin;             // City/airport code of departure
+    private String destination;        // Destination city/airport code
+    private LocalDate date;            // Date of departure
+    private int totalSeats;            // Total seats from the assigned airplane
     private int availableSeats;        // This is defaulted to total seats, but can be changed down the road
     private double price;
-    private Airplane airplane;         // When we assign a flight an airplane we should be able to populate most infomation from this 
+    private Airplane airplane;         // When we assign a flight an airplane we should be able to populate most infomation from this
     private boolean isFull;
 
 
@@ -29,26 +29,25 @@ public class Flight {
     private ArrayList<Customer> customersOnFlight; // Nmy idea is that once a customer is added we add this hear, and will use updates (potentially observer), from there this is great as we can see how many flights are left
 
 
-    // Constructor needs to be modifed for sure.
-
-     public Flight(String flightId,
+    // Constructor using simple origin/destination strings for now.
+    public Flight(String flightId,
                   Airline airline,
                   String origin,
                   String destination,
                   LocalDate date,
                   Airplane airplane,
-                  double price,
-                Airport departure, Airport destination) {
+                  double price) {
 
         this.flightId = flightId;
         this.airline = airline;
-        this.departure = depature.getCity();
-        this.destination = destination.getCity();
+        this.origin = origin;
+        this.destination = destination;
         this.date = date;
         this.airplane = airplane;
         this.totalSeats = airplane.getCapacity(); // This is good
-        this.availableSeats = this.totalSeats; //Initially available seats should be total seats
+        this.availableSeats = this.totalSeats; // Initially available seats should be total seats
         this.price = price;
+        this.isFull = !hasAvailableSeats();
     }
 
 

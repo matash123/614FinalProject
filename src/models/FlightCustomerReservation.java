@@ -1,4 +1,4 @@
-package domain;
+package src.models;
 
 import java.time.LocalDateTime;
 
@@ -11,16 +11,17 @@ public class FlightCustomerReservation {
     private final String reservationId;   // this what stores the reservation and connects customer & reservation & demolishes a many to many class linkage
     private Customer customer; // holding the customer so we can again access the customerID as a secondary key
     private Flight flight; // we want the flightID as our secondary key
-    private bool payedStatus;
+    private ReservationStatus status;   // life-cycle status of the reservation
+    private boolean payedStatus;
     private int seats;
     private LocalDateTime bookingDateTime;
 
     public FlightCustomerReservation(String reservationId,
-                       Customer customer,
-                       Flight flight,
-                       ReservationStatus status,
-                       int seats,
-                       LocalDateTime bookingDateTime) {
+                                     Customer customer,
+                                     Flight flight,
+                                     ReservationStatus status,
+                                     int seats,
+                                     LocalDateTime bookingDateTime) {
 
         this.reservationId = reservationId;
         this.customer = customer;
@@ -42,7 +43,7 @@ public class FlightCustomerReservation {
         return flight;
     }
 
-    public bool getStatus() {
+    public ReservationStatus getStatus() {
         return status;
     }
 

@@ -1,4 +1,4 @@
-package domain;
+package src.models;
 
 /**
  * Airport represents a departure/arrival location for flights.
@@ -25,15 +25,16 @@ public class Airport {
             throw new IllegalArgumentException("Airport code cannot be null or blank");
         }
 
-        this.code = code
+        this.code = code;
         this.name = name;
         this.city = city;
         this.country = country;
     }
 
-    // Convenience constructor if you only know code, which in most cases in good enoighy
+    // Convenience constructor if you only know code, which in most cases is good enough
     public Airport(String code) {
-        this(code, null, city, null);
+        // When only the code is known, other fields can be set later
+        this(code, null, null, null);
     }
 
     // Our default getters so we can aces

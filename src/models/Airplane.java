@@ -1,3 +1,5 @@
+package src.models;
+
 /**
  * Airplane represents an aircraft model/instance used for flights.
  * This will be a one to one relationship with each flight and has an airplane

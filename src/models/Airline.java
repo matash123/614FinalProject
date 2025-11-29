@@ -1,3 +1,4 @@
+package src.models;
 
 /**
  * Airline, this class hold any neccesary Airline information, whats going to be key is that the way we conceptualized
