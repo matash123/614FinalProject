@@ -44,9 +44,6 @@ public class AppController implements AppActions {
         }
         return rslt;
 
-        // deal with user input before actually loggin in through controller.
-        return userContoler.attemptLogin(username, password);
-
     }
 
 

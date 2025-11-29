@@ -1,15 +1,9 @@
 package src.components.customer;
 
 import java.awt.*;
-import java.text.ParseException;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.List;
 import javax.swing.*;
-import javax.swing.text.MaskFormatter;
-=======
-
->>>>>>> b9fc590fe5696cb596157dff9d7c3b43b422c4b8
 import src.AppActions;
 import src.DTO.FlightDTO;
 import src.components.DateInputField;
@@ -17,10 +11,7 @@ import src.components.ThemeAware;
 import src.config.Theme;
 import src.events.ControllerBus;
 import src.events.Observer;
-<<<<<<< HEAD
-import src.models.Flight;
-=======
->>>>>>> b9fc590fe5696cb596157dff9d7c3b43b422c4b8
+
 
 /**
  * Reusable flight search panel (table + filters) that delegates

@@ -1,9 +1,7 @@
 package src.controllers;
 
 import java.util.List;
-
 import src.database.RepositoryBridge;
-import src.main.java.app.AppContext;
 import src.models.Airline;
 import src.models.Airplane;
 

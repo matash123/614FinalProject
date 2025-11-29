@@ -2,17 +2,14 @@ package src.controllers;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import app.AppContext;
 import src.database.RepositoryBridge;
-import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
-import src.payment.PaymentGateway;
-import src.models.User;
 import src.models.Flight;
+import src.models.User;
+import src.payment.PaymentGateway;
 import src.strategies.BestAvailableSeatStrategy;
-import src.strategies.PricingStrategy;
 import src.strategies.DefaultPricingStrategy;
+import src.strategies.PricingStrategy;
 import src.strategies.PromoPricingDecorator;
 import src.strategies.SearchSortStrategy;
 import src.strategies.SeatSelectionStrategy;

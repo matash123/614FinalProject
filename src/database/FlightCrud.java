@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -28,24 +29,23 @@ public class FlightCrud {
 
             //CREATE SQL QUERY (now fixed with correct matching our SCHEMA so this way we are reaching our DATABASe), and connected to Airline
             // I was missing airplane table, which now created and joined in our search - my bad
-            StringBuilder sql = new StringBuilder(
-                StringBuilder sql = new StringBuilder(
-                    "SELECT " +
-                    "  flight.flight_id      AS id, " +
-                    "  flight.origin         AS origin, " +
-                    "  flight.destination    AS destination, " +
-                    "  flight.date           AS date, " +
-                    "  airline.name          AS airline, " +
-                    "  airline.airline_id    AS airline_id, " +
-                    "  airplane.airplane_id  AS airplane_id, " +
-                    "  airplane.model        AS airplane_model, " +
-                    "  airplane.manufacturer AS airplane_manufacturer, " +
-                    "  airplane.capacity     AS airplane_capacity, " +
-                    "  flight.price          AS price " +
-                    "FROM flight " +
-                    "JOIN airline  ON flight.airline_id  = airline.airline_id " +
-                    "JOIN airplane ON flight.airplane_id = airplane.airplane_id " +
-                    "WHERE 1=1"
+        StringBuilder sql = new StringBuilder(
+            "SELECT " +
+            "  flight.flight_id      AS id, " +
+            "  flight.origin         AS origin, " +
+            "  flight.destination    AS destination, " +
+            "  flight.date           AS date, " +
+            "  airline.name          AS airline, " +
+            "  airline.airline_id    AS airline_id, " +
+            "  airplane.airplane_id  AS airplane_id, " +
+            "  airplane.model        AS airplane_model, " +
+            "  airplane.manufacturer AS airplane_manufacturer, " +
+            "  airplane.capacity     AS airplane_capacity, " +
+            "  flight.price          AS price " +
+            "FROM flight " +
+            "JOIN airline  ON flight.airline_id  = airline.airline_id " +
+            "JOIN airplane ON flight.airplane_id = airplane.airplane_id " +
+            "WHERE 1=1"
         );
 
 

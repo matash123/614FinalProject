@@ -1,4 +1,4 @@
-package app;
+package src.controllers;
 
 import src.payment.PaymentGateway;
 import src.database.RepositoryBridge;

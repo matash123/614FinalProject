@@ -2,14 +2,12 @@ package src.controllers;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import app.AppContext;
 import src.DTO.FlightDTO;
 import src.database.RepositoryBridge;
 import src.events.ControllerBus;
+import src.models.Flight;
 import src.strategies.SearchSortStrategy;
 import src.strategies.SortByPriceStrategy;
-import src.models.Flight;
 
 //handles flight search logic
 public class FlightSearchController {

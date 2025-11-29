@@ -1,6 +1,5 @@
 package src.controllers;
 
-import app.AppContext;
 import src.database.RepositoryBridge;
 import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;

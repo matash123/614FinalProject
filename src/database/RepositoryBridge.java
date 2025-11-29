@@ -1,7 +1,6 @@
 package src.database;
 
 import java.util.List;
-
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -10,6 +9,7 @@ import src.models.User;
 
 //thin wrapper over the database layer
 public class RepositoryBridge {
+    
     //todo wrap existing database access like userCRUD
     //this is just a facade for now
 

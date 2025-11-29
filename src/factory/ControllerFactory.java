@@ -1,6 +1,6 @@
 package src.factory;
 
-import app.AppContext;
+import src.controllers.AppContext;
 import src.controllers.AuthController;
 import src.controllers.BookingController;
 import src.controllers.FlightSearchController;

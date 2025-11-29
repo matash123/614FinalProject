@@ -19,7 +19,7 @@ import src.models.Flight;
  * - add/edit flights (using existing airlines & airplanes)
  * - delete flights
  */
-public class FlightAgentPanel extends JPanel {
+public class AgentPanel extends JPanel {
 
     private final AdminFlightController controller;
 
@@ -45,7 +45,7 @@ public class FlightAgentPanel extends JPanel {
     // keep current list backing the table
     private List<Flight> currentFlights;
 
-    public FlightAgentPanel(AdminFlightController controller) {
+    public AgentPanel(AdminFlightController controller) {
         this.controller = controller;
 
         // ----- table model -----

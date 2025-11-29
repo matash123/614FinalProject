@@ -2,8 +2,6 @@ package src.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import app.AppContext;
 import src.database.RepositoryBridge;
 import src.models.Airline;
 import src.models.Airplane;

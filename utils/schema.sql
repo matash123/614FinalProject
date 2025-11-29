@@ -59,7 +59,7 @@ CREATE TABLE airline (
 -- Flights
 CREATE TABLE flight (
     flight_id        TEXT PRIMARY KEY,     -- ↔ Flight.flightId
-    airplane_id      TEXT NOT NULL         -- Flight.airplane.airplaneID
+    airplane_id      TEXT NOT NULL,         -- Flight.airplane.airplaneID
     airline_id       TEXT NOT NULL,        -- ↔ Flight.airline.airlineId
     origin           TEXT NOT NULL,        -- ↔ Flight.origin  (or departure)
     destination      TEXT NOT NULL,        -- ↔ Flight.destination
