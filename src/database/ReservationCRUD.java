@@ -252,4 +252,27 @@ public class ReservationCRUD {
             throw e;
         }
     }
+
+    /**
+     * Update the status field for a reservation.
+     */
+    public static void updateStatus(String reservationId, ReservationStatus newStatus) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+        if (newStatus == null) {
+            throw new IllegalArgumentException("newStatus required");
+        }
+
+        try {
+            String sql = "UPDATE reservation SET status = ? WHERE reservation_id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, newStatus.name());
+            DB.set(stmt, 2, reservationId.trim());
+            DB.update(stmt);
+        } catch (RuntimeException e) {
+            System.err.println("Error updating status for reservation " + reservationId + ": " + e.getMessage());
+            throw e;
+        }
+    }
 }

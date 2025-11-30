@@ -14,6 +14,7 @@ public class LoginPanel extends DynamicPanel {
     private JTextField userField;
     private JPasswordField passField;
     private JButton loginButton;
+    private JButton createAccountButton;
     private JButton themeButton;
 
     private final AppController appController;
@@ -55,6 +56,19 @@ public class LoginPanel extends DynamicPanel {
             }
         });
 
+        createAccountButton = new JButton("Create account");
+        createAccountButton.setFocusPainted(false);
+        createAccountButton.setContentAreaFilled(false);
+        createAccountButton.setOpaque(true);
+        createAccountButton.setBorderPainted(false);
+        createAccountButton.addActionListener(e -> {
+            var u = userField.getText();
+            var p = new String(passField.getPassword());
+
+            loginResult result = userController.registerCustomer(u, p);
+            errorLabel.setText(result.message());
+        });
+
         themeButton = new JButton("Switch Theme");
         themeButton.setFocusPainted(false);
         themeButton.setContentAreaFilled(false);
@@ -70,8 +84,13 @@ public class LoginPanel extends DynamicPanel {
         c.gridx = 1; add(passField, c);
         c.gridx = 0; c.gridy = 3; c.gridwidth = 2; add(errorLabel, c);
 
-        c.gridy = 4; add(loginButton, c);
-        c.gridy = 5; add(themeButton, c);
+        c.gridy = 4; c.gridwidth = 1;
+        add(loginButton, c);
+        c.gridx = 1;
+        add(createAccountButton, c);
+
+        c.gridx = 0; c.gridy = 5; c.gridwidth = 2;
+        add(themeButton, c);
     }
 
     @Override
@@ -90,6 +109,8 @@ public class LoginPanel extends DynamicPanel {
 
         loginButton.setBackground(t.buttonBg);
         loginButton.setForeground(t.buttonFg);
+        createAccountButton.setBackground(t.buttonBg);
+        createAccountButton.setForeground(t.buttonFg);
 
         themeButton.setBackground(t.buttonBg);
         themeButton.setForeground(t.buttonFg);
