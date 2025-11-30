@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import src.models.Airplane;
 
-public class AirplaneCrud {
+public class AirplaneCRUD {
 
     // SYS ADMIN ability create or update airplane, tied to an airline
     public static void addAirplane(Airplane airplane, String airlineId) {

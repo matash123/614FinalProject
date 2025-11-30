@@ -70,17 +70,22 @@ public class Flight {
         }
         availableSeats -= seatsRequested;
         //updating whether or not our flight is now full after adding these seats
-        isFull = hasAvailableSeats();
+        isFull = !hasAvailableSeats(); //this was a key error missed the ! // reference CHATGPT for helping big time
 
     }
 
     public void releaseSeats(int seatsToRelease) {
 
-        if (totalSeats > availableSeats + seatsToRelease) {
-            throw new IllegalArgumentException("Illegal Number of Seat Released");
+        if (availableSeats + seatsToRelease > totalSeats) {
+            throw new IllegalArgumentException("Illegal number of seats released");
         }
+
         availableSeats = availableSeats + seatsToRelease;
+
+        // update full flag reference to chatGPT
+        isFull = !hasAvailableSeats();
     }
+    
 
     /**
      * Starting all of our getters which are needed for all our members
@@ -94,11 +99,10 @@ public class Flight {
         return airline;
     }
 
-    public Airplane getAirplane(){
+    //missed this big error for a while
+    public Airplane getAirplane() {
         return airplane;
     }
-
-    
 
     public String getOrigin() {
         return origin;
@@ -124,7 +128,6 @@ public class Flight {
         return price;
     }
 
+    public boolean isFull() { return isFull; }
 
-
-    // setters only where you expect real changes (e.g., price update)
 }
