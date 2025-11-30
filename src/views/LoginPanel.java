@@ -61,13 +61,27 @@ public class LoginPanel extends DynamicPanel {
         createAccountButton.setContentAreaFilled(false);
         createAccountButton.setOpaque(true);
         createAccountButton.setBorderPainted(false);
+
         createAccountButton.addActionListener(e -> {
             var u = userField.getText();
             var p = new String(passField.getPassword());
 
             loginResult result = userController.registerCustomer(u, p);
-            errorLabel.setText(result.message());
+
+            if (result.success()) {
+                errorLabel.setText("");
+                // same behaviour as login button:
+                appController.onLoginSuccess(result.user());
+            } else {
+                errorLabel.setText(result.message());
+            }
         });
+
+        //instead of registering directly, switch to signup view, this was a huge breakthrough
+        //as we are making esentialy a new view object through APP CONTROLLER
+        //with code refactoring we of course eliminated AppActions so took some communication withh the
+        //team to flush this out fully.
+        
 
         themeButton = new JButton("Switch Theme");
         themeButton.setFocusPainted(false);

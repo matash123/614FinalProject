@@ -6,6 +6,7 @@ import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
 import src.events.Observer;
 import src.models.User;
+import src.views.SignupPanel;
 
 /**
  * Top-level application controller that receives high-level UI/UX events
@@ -107,5 +108,21 @@ public class AppController implements Observer {
         // For now, any RESERVATION_CREATED event results in the current view
         // being updated so components such as booking lists can refresh.
         updateAppView();
+    }
+
+
+    /**
+     * Added functions, which we did last for our login pages
+     */
+    public void showLogin() {
+        if (mf != null) {
+            mf.setView(mf.makeLoginPanel(this));
+        }
+    }
+
+    public void showSignup() {
+        if (mf != null) {
+            mf.setView(new SignupPanel(this));
+        }
     }
 }
