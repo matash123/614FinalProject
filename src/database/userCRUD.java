@@ -18,7 +18,7 @@ public class userCRUD {
 
         try {
             String sql =
-                "SELECT id, username, password, role " +
+                "SELECT id, username, email, password, role " +
                 "FROM user " +
                 "WHERE username = ? AND active = 1";
 
@@ -29,12 +29,14 @@ public class userCRUD {
 
             if (DB.next(rs)) {
                 // User constructor: (userId, name, password, role).
-                return new User(
+                User u = new User(
                     DB.getString(rs, "id"),
                     DB.getString(rs, "username"),
                     DB.getString(rs, "password"),
                     DB.getString(rs, "role")
                 );
+                u.setEmail(DB.getString(rs, "email"));
+                return u;
             }
 
             return null;
@@ -128,6 +130,126 @@ public class userCRUD {
         } catch (RuntimeException e) {
             System.err.println("Error in userCRUD.createCustomer: " + e.getMessage());
             throw e;
+        }
+    }
+
+    //update user name
+    public static boolean updateName(String userId, String newName) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("newName is required");
+        }
+
+        try {
+            String sql = "UPDATE user SET name = ? WHERE id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, newName.trim());
+            DB.set(stmt, 2, userId.trim());
+            DB.update(stmt);
+            return true;
+        } catch (RuntimeException e) {
+            System.err.println("Error updating name: " + e.getMessage());
+            return false;
+        }
+    }
+
+    //update user email
+    public static boolean updateEmail(String userId, String newEmail) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("newEmail is required");
+        }
+
+        try {
+            String sql = "UPDATE user SET email = ? WHERE id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, newEmail.trim());
+            DB.set(stmt, 2, userId.trim());
+            DB.update(stmt);
+            return true;
+        } catch (RuntimeException e) {
+            System.err.println("Error updating email: " + e.getMessage());
+            return false;
+        }
+    }
+
+    //update user password
+    public static boolean updatePassword(String userId, String newPassword) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("newPassword is required");
+        }
+
+        try {
+            String sql = "UPDATE user SET password = ? WHERE id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, newPassword);
+            DB.set(stmt, 2, userId.trim());
+            DB.update(stmt);
+            return true;
+        } catch (RuntimeException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            return false;
+        }
+    }
+
+    //toggle user active status
+    public static boolean toggleActive(String userId, boolean active) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId is required");
+        }
+
+        try {
+            String activeStatus = "";
+            if (active) {
+                activeStatus = "1";
+            }else{
+                activeStatus = "0";
+            }
+            String sql = "UPDATE user SET active = ? WHERE id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, activeStatus);
+            DB.set(stmt, 2, userId.trim());
+            DB.update(stmt);
+            return true;
+        } catch (RuntimeException e) {
+            System.err.println("Error toggling active status: " + e.getMessage());
+            return false;
+        }
+    }
+
+    //get user by id
+    public static User getUserById(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return null;
+        }
+
+        try {
+            String sql = "SELECT id, username, password, role, name, email, active FROM user WHERE id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, userId.trim());
+            ResultSet rs = DB.query(stmt);
+
+            if (DB.next(rs)) {
+                User u = new User(
+                    DB.getString(rs, "id"),
+                    DB.getString(rs, "name"),
+                    DB.getString(rs, "password"),
+                    DB.getString(rs, "role")
+                );
+                u.setEmail(DB.getString(rs, "email"));
+                return u;
+            }
+            return null;
+        } catch (RuntimeException e) {
+            System.err.println("Error in userCRUD.getUserById: " + e.getMessage());
+            return null;
         }
     }
 }

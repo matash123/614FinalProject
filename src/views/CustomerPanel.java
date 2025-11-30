@@ -3,6 +3,7 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
+import src.components.AccountEditorPanel;
 import src.components.ThemeAware;
 import src.components.UserBookingList;
 import src.components.UserBox;
@@ -57,7 +58,28 @@ public class CustomerPanel extends DynamicPanel {
         userBox = new UserBox();
         bookingList = new UserBookingList();
 
-        headerPanel.add(userBox, BorderLayout.WEST);
+        // Flight search + account buttons
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setOpaque(false);
+
+        JButton flightSearchButton = new JButton("Flight Search");
+        flightSearchButton.addActionListener(e -> showFlightSearch());
+        buttonsPanel.add(flightSearchButton);
+
+        JButton accountButton = new JButton("My Account");
+        accountButton.addActionListener(e -> {
+            AccountEditorPanel panel = new AccountEditorPanel(AccountEditorPanel.Mode.SELF);
+            panel.setPageController(pageController);
+            setActiveView(panel);
+        });
+        buttonsPanel.add(accountButton);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setOpaque(false);
+        leftPanel.add(userBox, BorderLayout.CENTER);
+        leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
         headerPanel.add(bookingList, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);

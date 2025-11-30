@@ -3,6 +3,7 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
+import src.components.AccountEditorPanel;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
@@ -67,7 +68,19 @@ public class AgentPanel extends DynamicPanel {
         userBox = new UserBox();
         workList = new BookingList();
 
-        headerPanel.add(userBox, BorderLayout.WEST);
+        //left side: user box + flight search button
+        JPanel leftButtonsPanel = new JPanel();
+        leftButtonsPanel.setOpaque(false);
+        JButton flightSearchButton = new JButton("Flight Search");
+        flightSearchButton.addActionListener(e -> showFlightSearch());
+        leftButtonsPanel.add(flightSearchButton);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setOpaque(false);
+        leftPanel.add(userBox, BorderLayout.CENTER);
+        leftPanel.add(leftButtonsPanel, BorderLayout.SOUTH);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
 
         // Right side: work list + agent tools (user list, reservation search)
         JPanel right = new JPanel(new BorderLayout());
@@ -76,6 +89,9 @@ public class AgentPanel extends DynamicPanel {
         JButton viewUsersButton = new JButton("View all active users");
         viewUsersButton.addActionListener(e -> {
             AgentUserListPanel userListPanel = new AgentUserListPanel();
+            // Wire the shared PageController so the list panel can open
+            // a reservations view for the selected user.
+            userListPanel.setPageController(pageController);
             pageController.show(userListPanel);
         });
 
@@ -85,10 +101,18 @@ public class AgentPanel extends DynamicPanel {
             pageController.show(panel);
         });
 
+        JButton editAccountButton = new JButton("Edit user account");
+        editAccountButton.addActionListener(e -> {
+            AccountEditorPanel panel = new AccountEditorPanel(AccountEditorPanel.Mode.AGENT);
+            panel.setPageController(pageController);
+            pageController.show(panel);
+        });
+
         JPanel buttons = new JPanel();
         buttons.setOpaque(false);
         buttons.add(viewUsersButton);
         buttons.add(searchReservationsButton);
+        buttons.add(editAccountButton);
 
         right.add(workList, BorderLayout.CENTER);
         right.add(buttons, BorderLayout.SOUTH);

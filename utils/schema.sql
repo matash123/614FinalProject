@@ -37,6 +37,10 @@ CREATE TABLE user (
 -- 
 CREATE TABLE customer (
     id TEXT PRIMARY KEY,
+    rewards_number TEXT,
+    address        TEXT,
+    phone          TEXT,
+    credit_card    TEXT,
     FOREIGN KEY (id) REFERENCES user(id)
 );
 
@@ -123,7 +127,11 @@ INSERT INTO user (id, name, username, email, password, active, role) VALUES
 ('5','leroy',  'leroyJenkins','leroy@example.com',  '1', 1, 'admin');
 
 -- Subtype rows (optional but nice)
-INSERT INTO customer (id) VALUES ('0'), ('1');
+-- Seed customers with some fake profile data so the account editor
+-- has something to display and edit.
+INSERT INTO customer (id, rewards_number, address, phone, credit_card) VALUES
+('0', 'RWD-000-TIM', '123 Maple St, Calgary',    '555-0100', '4111 1111 1111 1111'),
+('1', 'RWD-001-JEF', '456 Oak Ave, Toronto',     '555-0101', '5555 4444 3333 1111');
 INSERT INTO agent    (id) VALUES ('2'), ('3');
 INSERT INTO sysadmin (id) VALUES ('4'), ('5');
 
