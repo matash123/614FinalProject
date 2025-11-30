@@ -1,16 +1,13 @@
 package src.controllers;
 
-import src.database.RepositoryBridge;
 import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
 
 //handles notifications and promotions
 public class NotificationController {
-    private final RepositoryBridge repo;
     private long lastPromoSentTimestamp;
 
     public NotificationController() {
-        this.repo = AppContext.getInstance().repository();
         this.lastPromoSentTimestamp = 0;
     }
 
@@ -25,7 +22,7 @@ public class NotificationController {
         }
 
         //figuring out which users are eligible
-        //todo query repo for eligible customers
+        //todo query DB for eligible customers
         //telling everyone promos were sent
         ControllerBus.getInstance().publish(EventType.PROMO_SENT, "monthly_promo");
         lastPromoSentTimestamp = now;

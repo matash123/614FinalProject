@@ -3,7 +3,8 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.AppActions;
+import src.DTO.FlightDTO;
+import src.actions.CustomerActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
@@ -18,9 +19,10 @@ import src.config.Theme;
  */
 public class CustomerPanel extends MainPanel {
 
-    private final AppActions actions;
+    private final CustomerActions actions;
 
     // Core UI elements
+    private FlightSearchPanel flightSearchPanel;
     private JPanel headerPanel;
     private UserBox userBox;
     private BookingList bookingList;
@@ -28,7 +30,7 @@ public class CustomerPanel extends MainPanel {
 
     private JPanel activeArea;
 
-    public CustomerPanel(AppActions actions) {
+    public CustomerPanel(CustomerActions actions) {
         this.actions = actions;
 
         setLayout(new BorderLayout());
@@ -43,9 +45,8 @@ public class CustomerPanel extends MainPanel {
             "YVR → NRT | 2026-01-03"
         ));
 
-        // Default content: hook the (customer-mode) flight search panel
-        // up to the high-level app actions
-        setActiveView(new FlightSearchPanel(actions, FlightSearchPanel.Mode.CUSTOMER));
+        // Default content: show the reusable customer flight search view
+        showFlightSearch();
     }
 
     // -------------------------------------------------------------
@@ -78,6 +79,31 @@ public class CustomerPanel extends MainPanel {
 
         activeArea.add(placeholder, BorderLayout.CENTER);
         add(activeArea, BorderLayout.CENTER);
+    }
+
+    // -------------------------------------------------------------
+    // VIEW FACTORIES / ACCESSORS
+    // -------------------------------------------------------------
+    /**
+     * Lazily create and configure the customer flight search panel,
+     * and keep a reference so we can switch back to it later.
+     */
+    private FlightSearchPanel getOrCreateFlightSearchPanel() {
+        if (flightSearchPanel == null) {
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER);
+            flightSearchPanel.setSearchHandler((origin, dest, date) -> {
+                if (actions != null) {
+                    List<FlightDTO> flights = actions.searchFlights(origin, dest, date, null);
+                    flightSearchPanel.setFlights(flights);
+                }
+            });
+        }
+        return flightSearchPanel;
+    }
+
+    /** Convenience method for controllers to make the search view active. */
+    public void showFlightSearch() {
+        setActiveView(getOrCreateFlightSearchPanel());
     }
 
     // -------------------------------------------------------------

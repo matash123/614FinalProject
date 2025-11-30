@@ -10,7 +10,7 @@ $DB_FILE  = Join-Path $ROOT_DIR "flights.db"
 $SCHEMA   = Join-Path $ROOT_DIR "utils/schema.sql"
 
 # --- Populate DB (always runs first) ---
-sqlite3 $DB_FILE ".read $SCHEMA"
+#sqlite3 $DB_FILE ".read $SCHEMA"
 
 # --- Check .env ---
 if (!(Test-Path $ENV_FILE)) {

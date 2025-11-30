@@ -1,9 +1,16 @@
 package src.controllers;
 
-import src.AppActions;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import src.AppFrame;
+import src.DTO.FlightDTO;
+import src.actions.AppActions;
 import src.config.Theme;
 import src.factory.ControllerFactory;
+import src.models.Airline;
+import src.models.Airplane;
+import src.models.Flight;
 import src.models.User;
 import src.schemas.loginResult;
 
@@ -16,6 +23,7 @@ public class AppController implements AppActions {
     private AppFrame mf;
     private final UserController userController = new UserController();
     private final src.controllers.FlightSearchController flightSearchController;
+    private final AdminFlightController adminFlightController = new AdminFlightController();
 
     public  AppController(Theme t){
         this.theme = t;
@@ -77,10 +85,55 @@ public class AppController implements AppActions {
     // FLIGHT SEARCH: delegate from UI to FlightSearchController
     // ------------------------------------------------------------
     @Override
-    public void searchFlights(String origin, String destination, String startDate, String endDate) {
+    public List<FlightDTO> searchFlights(String origin, String destination, String startDate, String endDate) {
         // For now, FlightSearchController supports a single departure date.
         String dateFilter = (startDate != null && !startDate.isBlank()) ? startDate : null;
-        flightSearchController.searchFlights(origin, destination, dateFilter);
+
+        List<Flight> flights = flightSearchController.searchFlights(origin, destination, dateFilter);
+
+        // Convert domain models to DTOs for the UI.
+        return flights.stream()
+            .map(FlightDTO::fromModel)
+            .collect(Collectors.toList());
+    }
+
+    // ------------------------------------------------------------
+    // AGENT / ADMIN FLIGHT MANAGEMENT
+    // ------------------------------------------------------------
+
+    @Override
+    public List<Airline> loadAllAirlines() {
+        return adminFlightController.getAllAirlines();
+    }
+
+    @Override
+    public List<Airplane> loadAllAirplanes() {
+        return adminFlightController.getAllAirplanes();
+    }
+
+    public Flight agentSaveFlight(
+        String flightId,
+        Airline airline,
+        Airplane airplane,
+        String origin,
+        String destination,
+        LocalDate date,
+        double price
+    ) {
+        return adminFlightController.createOrUpdateFlight(
+            flightId,
+            airline,
+            airplane,
+            origin,
+            destination,
+            date,
+            price
+        );
+    }
+
+    @Override
+    public void agentDeleteFlight(String flightId) {
+        adminFlightController.cancelFlight(flightId);
     }
 
 }

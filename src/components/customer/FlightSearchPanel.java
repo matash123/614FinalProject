@@ -4,38 +4,20 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
-import src.AppActions;
 import src.DTO.FlightDTO;
 import src.components.DateInputField;
+import src.components.LabeledTextField;
 import src.components.ThemeAware;
 import src.config.Theme;
-import src.events.ControllerBus;
-import src.events.Observer;
 
 
 /**
- * Reusable flight search panel (table + filters) that delegates
- * user actions to the high-level AppActions (AppController or another
- * implementation), and listens for FLIGHTS_LOADED events to refresh
- * the table.
- *
- * This panel is intentionally generic so it can be embedded in
- * customer, agent, or admin dashboards. It displays a table of
- * FlightDTOs provided by the application layer.
+ * Reusable flight search panel (table + filters) concerned only with
+ * building and managing UI components. It exposes simple callbacks so
+ * higher-level panels (customer, agent, admin) can plug in their own
+ * behaviors.
  */
-public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
-
-    private final AppActions actions;
-
-    private JTable flightTable;
-    private JScrollPane tableScroll;
-
-    private JTextField originField;
-    private JTextField destField;
-    private DateInputField dateField;
-    private JButton searchButton;
-
-    private JPanel searchBar;
+public class FlightSearchPanel extends JPanel implements ThemeAware {
 
     /**
      * Logical context for the search panel – allows future customization
@@ -48,15 +30,42 @@ public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
         ADMIN
     }
 
-    private final Mode mode;
-
-    public FlightSearchPanel(AppActions actions) {
-        this(actions, Mode.CUSTOMER);
+    /**
+     * Callback interface used to notify the parent when the user presses
+     * the Search button. Implementations can route this to AppActions or
+     * any other controller.
+     */
+    @FunctionalInterface
+    public interface SearchHandler {
+        void onSearch(String origin, String destination, String date);
     }
 
-    public FlightSearchPanel(AppActions actions, Mode mode) {
-        this.actions = actions;
+    private final Mode mode;
+
+    private JTable flightTable;
+    private JScrollPane tableScroll;
+
+    private LabeledTextField originField;
+    private LabeledTextField destField;
+    private DateInputField dateField;
+    private JButton searchButton;
+
+    private JPanel searchBar;
+    private int nextSearchRow = 0;
+
+    private SearchHandler searchHandler;
+
+    public FlightSearchPanel() {
+        this(Mode.CUSTOMER, null);
+    }
+
+    public FlightSearchPanel(Mode mode) {
+        this(mode, null);
+    }
+
+    public FlightSearchPanel(Mode mode, SearchHandler handler) {
         this.mode = mode;
+        this.searchHandler = handler;
 
         setLayout(new BorderLayout());
         setOpaque(true);
@@ -64,11 +73,53 @@ public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
         buildResultsTable();
         buildSearchBar();
 
-        // subscribe to flight search results
-        ControllerBus.getInstance().subscribe(ControllerBus.EventType.FLIGHTS_LOADED, this);
-
         // start with an empty table
         updateTableFromFlights(new ArrayList<>());
+    }
+
+    // ------------------------------------------------------------
+    // PUBLIC API FOR PARENTS
+    // ------------------------------------------------------------
+
+    public void setSearchHandler(SearchHandler handler) {
+        this.searchHandler = handler;
+    }
+
+    /**
+     * Programmatically replace the flights displayed in the table.
+     * Useful for agent/admin flows that perform synchronous searches.
+     */
+    public void setFlights(List<FlightDTO> flights) {
+        updateTableFromFlights(flights != null ? flights : new ArrayList<>());
+    }
+
+    /** Exposes the underlying table for row listeners, column tweaks, etc. */
+    public JTable getFlightTable() {
+        return flightTable;
+    }
+
+    /** Exposes the search bar container so callers can inspect or arrange components if needed. */
+    public JPanel getSearchBarPanel() {
+        return searchBar;
+    }
+
+    /**
+     * Add an extra control below the built-in filters/search button.
+     * This is primarily intended for agent/admin-only tools.
+     */
+    public void addExtraSearchControl(Component comp) {
+        if (searchBar == null || comp == null) return;
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(6, 12, 6, 12);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = nextSearchRow++;
+        c.gridwidth = 2;
+
+        searchBar.add(comp, c);
+        searchBar.revalidate();
+        searchBar.repaint();
     }
 
     // ------------------------------------------------------------
@@ -98,38 +149,58 @@ public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
         c.insets = new Insets(6, 12, 6, 12);
         c.fill = GridBagConstraints.HORIZONTAL;
 
-        originField = new JTextField();
-        destField = new JTextField();
+        originField = new LabeledTextField("Origin");
+        destField = new LabeledTextField("Destination");
         dateField = new DateInputField("Date");
 
         searchButton = new JButton("Search");
 
-        int row = 0;
+        // origin row
+        c.gridy = nextSearchRow;
+        c.gridx = 0;
+        searchBar.add(originField, c);
+        c.gridx = 1;
+        searchBar.add(originField.getInnerField(), c);
+        nextSearchRow++;
 
-        c.gridy = row; c.gridx = 0; searchBar.add(new JLabel("Origin"), c);
-        c.gridx = 1; searchBar.add(originField, c);
+        // destination row
+        c.gridy = nextSearchRow;
+        c.gridx = 0;
+        searchBar.add(destField, c);
+        c.gridx = 1;
+        searchBar.add(destField.getInnerField(), c);
+        nextSearchRow++;
 
-        row++;
-        c.gridy = row; c.gridx = 0; searchBar.add(new JLabel("Destination"), c);
-        c.gridx = 1; searchBar.add(destField, c);
+        // date row
+        c.gridy = nextSearchRow;
+        c.gridx = 0;
+        searchBar.add(new JLabel("Date"), c);
+        c.gridx = 1;
+        c.weightx = 1.0;
+        c.weighty = 0.0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        searchBar.add(dateField, c);
+        nextSearchRow++;
 
-        row++;
-        c.gridy = row; c.gridx = 0; searchBar.add(new JLabel("Date"), c);
-        c.gridx = 1; c.weightx = 1.0; c.weighty = 0.0;
-        c.fill = GridBagConstraints.HORIZONTAL; searchBar.add(dateField, c);
-
-        row++;
-        c.gridy = row; c.gridx = 0; c.gridwidth = 2;
+        // search button row
+        c.gridy = nextSearchRow;
+        c.gridx = 0;
+        c.gridwidth = 2;
         searchBar.add(searchButton, c);
+        nextSearchRow++;
 
         searchButton.addActionListener(e -> {
-            if (actions != null) {
+            if (searchHandler != null) {
                 String origin = originField.getText().trim();
                 String dest   = destField.getText().trim();
-                String date   = dateField.getText().trim();
-                // Agent/admin can plug in their own AppActions implementation
-                // to interpret this call differently if needed.
-                actions.searchFlights(origin, dest, date, null);
+
+                // Let DateInputField decide how to interpret the mask.
+                // It returns null for an untouched mask ("____-__-__")
+                // and the raw masked value (e.g., "2025-__-__") otherwise.
+                String date = dateField.getText();
+                System.out.println("date: " + date);
+
+                searchHandler.onSearch(origin, dest, date);
             }
         });
 
@@ -159,19 +230,6 @@ public class FlightSearchPanel extends JPanel implements ThemeAware, Observer {
         flightTable.setModel(model);
     }
 
-    @Override
-    public void update(Object event) {
-        if (event instanceof List<?>) {
-            List<?> raw = (List<?>) event;
-            List<FlightDTO> flights = new ArrayList<>();
-            for (Object o : raw) {
-                if (o instanceof FlightDTO f) {
-                    flights.add(f);
-                }
-            }
-            updateTableFromFlights(flights);
-        }
-    }
     // ------------------------------------------------------------
     // THEME SUPPORT
     // ------------------------------------------------------------

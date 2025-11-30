@@ -2,7 +2,6 @@ package src.controllers;
 
 import java.math.BigDecimal;
 import java.util.List;
-import src.database.RepositoryBridge;
 import src.events.ControllerExceptions;
 import src.models.Flight;
 import src.models.User;
@@ -19,13 +18,11 @@ public class BookingController {
     private PricingStrategy pricing;
     private SearchSortStrategy sorter;
     private SeatSelectionStrategy seatStrategy;
-    private final RepositoryBridge repo;
     private final PaymentGateway paymentGateway;
 
     public BookingController() {
         this.pricing = new DefaultPricingStrategy();
         this.seatStrategy = new BestAvailableSeatStrategy();
-        this.repo = AppContext.getInstance().repository();
         this.paymentGateway = AppContext.getInstance().paymentGateway();
     }
 

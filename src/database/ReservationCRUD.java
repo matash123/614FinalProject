@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import src.models.Customer;
 import src.models.Flight;
 import src.models.FlightCustomerReservation;
@@ -35,7 +34,8 @@ public class ReservationCRUD {
             DB.set(stmt, 1, r.getReservationId());
             DB.set(stmt, 2, r.getCustomer().getUserId());
             DB.set(stmt, 3, r.getFlight().getFlightId());
-            DB.set(stmt, 4, r.getSeats());
+            // seats is an int on the model, but our DB helper stores strings
+            DB.set(stmt, 4, Integer.toString(r.getSeats()));
             DB.set(stmt, 5, r.getStatus().name()); // we store enum name (CREATED, CONFIRMED, ...)
 
             LocalDateTime ts = r.getBookingDateTime();
