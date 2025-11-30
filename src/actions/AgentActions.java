@@ -40,6 +40,13 @@ public interface AgentActions extends UserActions {
      * Delete/cancel a flight from the agent console.
      */
     void agentDeleteFlight(String flightId);
+
+    /**
+     * Navigate from the main agent dashboard to the booking / reservation
+     * editing workspace. The concrete implementation lives in the
+     * top-level {@code AppController}, which decides which panel to show.
+     */
+    void showAgentBookingEditor();
 }
 
 

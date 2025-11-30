@@ -21,7 +21,7 @@ public interface UserActions {
      * For now, {@code endDate} may be unused by some implementations but is
      * included to support flexible date-range searches later.
      */
-    List<FlightDTO> searchFlights(String origin, String destination, String startDate, String endDate);
+    List<FlightDTO> searchFlights(String origin, String destination, String startDate, String id);
 }
 
 

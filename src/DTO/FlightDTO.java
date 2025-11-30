@@ -1,7 +1,6 @@
 package src.DTO;
 
 import java.time.LocalDate;
-
 import src.models.Flight;
 
 /**

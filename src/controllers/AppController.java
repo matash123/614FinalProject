@@ -56,14 +56,20 @@ public class AppController implements AppActions {
 
 
     public void onLoginSuccess(User user) {
-        //set active user as user;
-        mf.setView(mf.makeCustomerPanel(this));
+        if (mf == null || user == null) {
+            return;
+        }
+
+        String role = user.getRole();
+        if ("AGENT".equalsIgnoreCase(role)) {
+            mf.setView(mf.makeAgentPanel(this));
+        } else if ("ADMIN".equalsIgnoreCase(role)) {
+            mf.setView(mf.makeAdminPanel(this));
+        } else {
+            // Default to customer experience for now.
+            mf.setView(mf.makeCustomerPanel(this));
+        }
         mf.applyThemeToUI(this.theme);
-        // switch (user.getRole()) {
-        //     case "CUSTOMER" -> view.showCustomer();
-        //     case "AGENT"    -> view.showAgent();
-        //     case "ADMIN"    -> view.showAdmin();
-        // }
     }
 
     // ------------------------------------------------------------
@@ -85,11 +91,12 @@ public class AppController implements AppActions {
     // FLIGHT SEARCH: delegate from UI to FlightSearchController
     // ------------------------------------------------------------
     @Override
-    public List<FlightDTO> searchFlights(String origin, String destination, String startDate, String endDate) {
+    public List<FlightDTO> searchFlights(String origin, String destination, String startDate, String id) {
         // For now, FlightSearchController supports a single departure date.
         String dateFilter = (startDate != null && !startDate.isBlank()) ? startDate : null;
+        String idFilter = (id != null && !id.isBlank()) ? id : null;
 
-        List<Flight> flights = flightSearchController.searchFlights(origin, destination, dateFilter);
+        List<Flight> flights = flightSearchController.searchFlights(origin, destination, dateFilter, idFilter);
 
         // Convert domain models to DTOs for the UI.
         return flights.stream()
@@ -134,6 +141,27 @@ public class AppController implements AppActions {
     @Override
     public void agentDeleteFlight(String flightId) {
         adminFlightController.cancelFlight(flightId);
+    }
+
+    // ------------------------------------------------------------
+    // AGENT BOOKING / RESERVATION EDITING NAVIGATION
+    // ------------------------------------------------------------
+    @Override
+    public void showAgentBookingEditor() {
+        if (mf == null) {
+            return;
+        }
+        mf.setView(new src.views.AgentBookingEditorPanel(this));
+        mf.applyThemeToUI(this.theme);
+    }
+
+    @Override
+    public void showAdminFlightEditor() {
+        if (mf == null) {
+            return;
+        }
+        mf.setView(new src.views.AdminFlightEditorPanel(this));
+        mf.applyThemeToUI(this.theme);
     }
 
 }

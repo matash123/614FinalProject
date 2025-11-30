@@ -3,7 +3,6 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.DTO.FlightDTO;
 import src.actions.CustomerActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
@@ -90,13 +89,10 @@ public class CustomerPanel extends MainPanel {
      */
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
-            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER);
-            flightSearchPanel.setSearchHandler((origin, dest, date) -> {
-                if (actions != null) {
-                    List<FlightDTO> flights = actions.searchFlights(origin, dest, date, null);
-                    flightSearchPanel.setFlights(flights);
-                }
-            });
+            // Pass the shared AppActions implementation directly so the
+            // search panel can talk to AppController without another
+            // indirection layer in this view.
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER, actions);
         }
         return flightSearchPanel;
     }
