@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import src.DTO.FlightDTO;
+import src.actions.UserActions;
 import src.components.DateInputField;
 import src.components.LabeledTextField;
 import src.components.ThemeAware;
@@ -13,9 +14,9 @@ import src.config.Theme;
 
 /**
  * Reusable flight search panel (table + filters) concerned only with
- * building and managing UI components. It exposes simple callbacks so
- * higher-level panels (customer, agent, admin) can plug in their own
- * behaviors.
+ * building and managing UI components. It talks directly to the
+ * application actions (implemented by AppController) so callers
+ * don't need to wire search handlers manually.
  */
 public class FlightSearchPanel extends JPanel implements ThemeAware {
 
@@ -30,30 +31,20 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         ADMIN
     }
 
-    /**
-     * Callback interface used to notify the parent when the user presses
-     * the Search button. Implementations can route this to AppActions or
-     * any other controller.
-     */
-    @FunctionalInterface
-    public interface SearchHandler {
-        void onSearch(String origin, String destination, String date);
-    }
-
     private final Mode mode;
+    private final UserActions actions;
 
     private JTable flightTable;
     private JScrollPane tableScroll;
 
     private LabeledTextField originField;
     private LabeledTextField destField;
+    private LabeledTextField idField;
     private DateInputField dateField;
     private JButton searchButton;
 
     private JPanel searchBar;
     private int nextSearchRow = 0;
-
-    private SearchHandler searchHandler;
 
     public FlightSearchPanel() {
         this(Mode.CUSTOMER, null);
@@ -63,9 +54,9 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         this(mode, null);
     }
 
-    public FlightSearchPanel(Mode mode, SearchHandler handler) {
+    public FlightSearchPanel(Mode mode, UserActions actions) {
         this.mode = mode;
-        this.searchHandler = handler;
+        this.actions = actions;
 
         setLayout(new BorderLayout());
         setOpaque(true);
@@ -80,10 +71,6 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
     // ------------------------------------------------------------
     // PUBLIC API FOR PARENTS
     // ------------------------------------------------------------
-
-    public void setSearchHandler(SearchHandler handler) {
-        this.searchHandler = handler;
-    }
 
     /**
      * Programmatically replace the flights displayed in the table.
@@ -151,6 +138,7 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
 
         originField = new LabeledTextField("Origin");
         destField = new LabeledTextField("Destination");
+        idField = new LabeledTextField("Flight ID");
         dateField = new DateInputField("Date");
 
         searchButton = new JButton("Search");
@@ -171,15 +159,21 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         searchBar.add(destField.getInnerField(), c);
         nextSearchRow++;
 
-        // date row
+        // date row (label comes from DateInputField itself)
         c.gridy = nextSearchRow;
-        c.gridx = 0;
-        searchBar.add(new JLabel("Date"), c);
         c.gridx = 1;
         c.weightx = 1.0;
         c.weighty = 0.0;
         c.fill = GridBagConstraints.HORIZONTAL;
         searchBar.add(dateField, c);
+        nextSearchRow++;
+
+        // flight id row
+        c.gridy = nextSearchRow;
+        c.gridx = 0;
+        searchBar.add(idField, c);
+        c.gridx = 1;
+        searchBar.add(idField.getInnerField(), c);
         nextSearchRow++;
 
         // search button row
@@ -190,17 +184,18 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         nextSearchRow++;
 
         searchButton.addActionListener(e -> {
-            if (searchHandler != null) {
+            if (actions != null) {
                 String origin = originField.getText().trim();
                 String dest   = destField.getText().trim();
-
+                String id     = idField.getText().trim();
                 // Let DateInputField decide how to interpret the mask.
                 // It returns null for an untouched mask ("____-__-__")
                 // and the raw masked value (e.g., "2025-__-__") otherwise.
-                String date = dateField.getText();
+                String date   = dateField.getText();
                 System.out.println("date: " + date);
 
-                searchHandler.onSearch(origin, dest, date);
+                List<FlightDTO> flights = actions.searchFlights(origin, dest, date, id);
+                setFlights(flights);
             }
         });
 

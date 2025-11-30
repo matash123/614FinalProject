@@ -3,6 +3,8 @@ package src.views;
 import java.awt.*;
 import javax.swing.*;
 import src.AppFrame;
+import src.actions.AdminActions;
+import src.actions.AgentActions;
 import src.actions.CustomerActions;
 import src.actions.LoginActions;
 import src.config.Theme;
@@ -50,5 +52,15 @@ public class MainFrame extends JFrame implements AppFrame {
     @Override
     public MainPanel makeCustomerPanel(CustomerActions actions){
         return new CustomerPanel(actions);
+    }
+
+    @Override
+    public MainPanel makeAgentPanel(AgentActions actions) {
+        return new AgentPanel(actions);
+    }
+
+    @Override
+    public MainPanel makeAdminPanel(AdminActions actions) {
+        return new AdminPanel(actions);
     }
 }

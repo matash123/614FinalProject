@@ -117,9 +117,9 @@ CREATE TABLE airplane (
 INSERT INTO user (id, name, username, email, password, active, role) VALUES 
 ('0','timmy',  'kingTimmy',   'timmy@example.com',  '1', 1, 'customer'),
 ('1','jeff',   'kingJeff',    'jeff@example.com',   '1', 1, 'customer'),
-('2','sarah',  'queenSarah',  'sarah@example.com',  '1', 1, 'agent'),
+('2','agent',  'agent',       'agent@example.com',  '1', 1, 'agent'),
 ('3','robot',  'kingRobot',   'robot@example.com',  '1', 1, 'agent'),
-('4','sam',    'queenSam',    'sam@example.com',    '1', 1, 'admin'),
+('4','admin',  'admin',       'admin@example.com',    '1', 1, 'admin'),
 ('5','leroy',  'leroyJenkins','leroy@example.com',  '1', 1, 'admin');
 
 -- Subtype rows (optional but nice)

@@ -3,7 +3,6 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.DTO.FlightDTO;
 import src.actions.AgentActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
@@ -89,19 +88,19 @@ public class AgentPanel extends MainPanel {
      */
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
-            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.AGENT);
-            flightSearchPanel.setSearchHandler((origin, dest, date) -> {
+            // Pass the shared AppActions implementation directly so the
+            // search panel can talk to AppController without another
+            // indirection layer in this view.
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.AGENT, actions);
+
+            // Extra control that only agents see – jump to booking editor
+            JButton editBookingsButton = new JButton("Edit bookings / reservations");
+            editBookingsButton.addActionListener(e -> {
                 if (actions != null) {
-                    // Use the shared user-level search and push results
-                    // directly into the reusable table component.
-                    List<FlightDTO> flights = actions.searchFlights(origin, dest, date, null);
-                    flightSearchPanel.setFlights(flights);
+                    actions.showAgentBookingEditor();
                 }
             });
-
-            // Example of adding an extra control that only agents see
-            JButton manageButton = new JButton("Manage Selected Flight");
-            flightSearchPanel.addExtraSearchControl(manageButton);
+            flightSearchPanel.addExtraSearchControl(editBookingsButton);
         }
         return flightSearchPanel;
     }

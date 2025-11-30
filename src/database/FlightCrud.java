@@ -20,7 +20,7 @@ public class FlightCrud {
      * Basic search by origin/destination and optional exact departure date.
      * Adjust the SQL/table/column names here to match your actual schema.
      */
-    public static List<Flight> searchFlights(String origin, String destination, String date) {
+    public static List<Flight> searchFlights(String origin, String destination, String date, String search_id) {
         List<Flight> flights = new ArrayList<>();
 
         try {
@@ -67,6 +67,10 @@ public class FlightCrud {
                 // wildcard.
                 sql.append(" AND date LIKE ?");
                 params.add(date.trim());
+            }
+            if (search_id != null && !search_id.isBlank()) {
+                sql.append(" AND flight_id = ?");
+                params.add(search_id.trim());
             }
 
             PreparedStatement stmt = DB.prepare(sql.toString());
