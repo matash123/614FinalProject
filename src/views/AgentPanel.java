@@ -3,7 +3,6 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.actions.AgentActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
@@ -19,8 +18,6 @@ import src.config.Theme;
  */
 public class AgentPanel extends MainPanel {
 
-    private final AgentActions actions;
-
     // Core UI elements
     private JPanel headerPanel;
     private UserBox userBox;
@@ -29,9 +26,7 @@ public class AgentPanel extends MainPanel {
     private JPanel activeArea;
     private FlightSearchPanel flightSearchPanel;
 
-    public AgentPanel(AgentActions actions) {
-        this.actions = actions;
-
+    public AgentPanel() {
         setLayout(new BorderLayout());
         buildHeader();
         buildActiveArea();
@@ -88,17 +83,13 @@ public class AgentPanel extends MainPanel {
      */
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
-            // Pass the shared AppActions implementation directly so the
-            // search panel can talk to AppController without another
-            // indirection layer in this view.
-            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.AGENT, actions);
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.AGENT);
 
             // Extra control that only agents see – jump to booking editor
             JButton editBookingsButton = new JButton("Edit bookings / reservations");
             editBookingsButton.addActionListener(e -> {
-                if (actions != null) {
-                    actions.showAgentBookingEditor();
-                }
+                // Show the agent booking editor inside this panel's active area.
+                setActiveView(new AgentBookingEditorPanel());
             });
             flightSearchPanel.addExtraSearchControl(editBookingsButton);
         }

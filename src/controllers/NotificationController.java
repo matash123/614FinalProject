@@ -27,7 +27,5 @@ public class NotificationController {
         ControllerBus.getInstance().publish(EventType.PROMO_SENT, "monthly_promo");
         lastPromoSentTimestamp = now;
     }
-
-    //todo channel delivery like email or sms and user eligibility logic
 }
 

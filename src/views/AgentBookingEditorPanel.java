@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-import src.actions.AgentActions;
 import src.config.Theme;
 
 /**
@@ -14,12 +13,9 @@ import src.config.Theme;
  */
 public class AgentBookingEditorPanel extends MainPanel {
 
-    private final AgentActions actions;
     private final JLabel placeholder;
 
-    public AgentBookingEditorPanel(AgentActions actions) {
-        this.actions = actions;
-
+    public AgentBookingEditorPanel() {
         setLayout(new BorderLayout());
 
         placeholder = new JLabel(

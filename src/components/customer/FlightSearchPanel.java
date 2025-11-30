@@ -4,19 +4,20 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
-import src.DTO.FlightDTO;
-import src.actions.UserActions;
 import src.components.DateInputField;
 import src.components.LabeledTextField;
 import src.components.ThemeAware;
 import src.config.Theme;
+import src.controllers.FlightSearchController;
+import src.factory.ControllerFactory;
+import src.models.Flight;
 
 
 /**
  * Reusable flight search panel (table + filters) concerned only with
- * building and managing UI components. It talks directly to the
- * application actions (implemented by AppController) so callers
- * don't need to wire search handlers manually.
+ * building and managing UI components. It now talks directly to the
+ * dedicated {@link FlightSearchController} (via {@link ControllerFactory})
+ * so that search logic no longer flows through the top-level AppController.
  */
 public class FlightSearchPanel extends JPanel implements ThemeAware {
 
@@ -32,7 +33,8 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
     }
 
     private final Mode mode;
-    private final UserActions actions;
+    /** Dedicated controller for flight search; obtained from the factory. */
+    private final FlightSearchController flightSearchController;
 
     private JTable flightTable;
     private JScrollPane tableScroll;
@@ -46,17 +48,13 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
     private JPanel searchBar;
     private int nextSearchRow = 0;
 
-    public FlightSearchPanel() {
-        this(Mode.CUSTOMER, null);
-    }
+    // keep a parallel list of the flights backing the table so that
+    // calling code can retrieve the currently selected flight.
+    private List<Flight> currentFlights = new ArrayList<>();
 
     public FlightSearchPanel(Mode mode) {
-        this(mode, null);
-    }
-
-    public FlightSearchPanel(Mode mode, UserActions actions) {
         this.mode = mode;
-        this.actions = actions;
+        this.flightSearchController = ControllerFactory.getInstance().flights();
 
         setLayout(new BorderLayout());
         setOpaque(true);
@@ -76,13 +74,33 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
      * Programmatically replace the flights displayed in the table.
      * Useful for agent/admin flows that perform synchronous searches.
      */
-    public void setFlights(List<FlightDTO> flights) {
+    public void setFlights(List<Flight> flights) {
         updateTableFromFlights(flights != null ? flights : new ArrayList<>());
     }
 
     /** Exposes the underlying table for row listeners, column tweaks, etc. */
     public JTable getFlightTable() {
         return flightTable;
+    }
+
+    /**
+     * Returns the {@link Flight} corresponding to the currently
+     * selected row in the table, or {@code null} if nothing is
+     * selected or the backing data is empty.
+     */
+    public Flight getSelectedFlight() {
+        if (flightTable == null || currentFlights.isEmpty()) {
+            return null;
+        }
+        int viewRow = flightTable.getSelectedRow();
+        if (viewRow < 0) {
+            return null;
+        }
+        int modelRow = flightTable.convertRowIndexToModel(viewRow);
+        if (modelRow < 0 || modelRow >= currentFlights.size()) {
+            return null;
+        }
+        return currentFlights.get(modelRow);
     }
 
     /** Exposes the search bar container so callers can inspect or arrange components if needed. */
@@ -184,19 +202,18 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
         nextSearchRow++;
 
         searchButton.addActionListener(e -> {
-            if (actions != null) {
-                String origin = originField.getText().trim();
-                String dest   = destField.getText().trim();
-                String id     = idField.getText().trim();
-                // Let DateInputField decide how to interpret the mask.
-                // It returns null for an untouched mask ("____-__-__")
-                // and the raw masked value (e.g., "2025-__-__") otherwise.
-                String date   = dateField.getText();
-                System.out.println("date: " + date);
+            String origin = originField.getText().trim();
+            String dest   = destField.getText().trim();
+            String id     = idField.getText().trim();
+            // Let DateInputField decide how to interpret the mask.
+            // It returns null for an untouched mask ("____-__-__")
+            // and the raw masked value (e.g., "2025-__-__") otherwise.
+            String date   = dateField.getText();
+            System.out.println("date: " + date);
 
-                List<FlightDTO> flights = actions.searchFlights(origin, dest, date, id);
-                setFlights(flights);
-            }
+            List<Flight> flights =
+                flightSearchController.searchFlights(origin, dest, date, id);
+            setFlights(flights);
         });
 
         add(searchBar, BorderLayout.SOUTH);
@@ -205,17 +222,18 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
     // ------------------------------------------------------------
     // TABLE UPDATE FROM CONTROLLER EVENTS
     // ------------------------------------------------------------
-    private void updateTableFromFlights(List<FlightDTO> flights) {
+    private void updateTableFromFlights(List<Flight> flights) {
+        currentFlights = new ArrayList<>(flights);
         String[] cols = { "Origin", "Destination", "Date", "Airline", "Price" };
 
-        String[][] data = new String[flights.size()][cols.length];
-        for (int i = 0; i < flights.size(); i++) {
-            FlightDTO f = flights.get(i);
-            data[i][0] = f.origin();
-            data[i][1] = f.destination();
-            data[i][2] = (f.date() != null) ? f.date().toString() : "";
-            data[i][3] = f.airlineName();
-            data[i][4] = String.format("$%.2f", f.price());
+        String[][] data = new String[currentFlights.size()][cols.length];
+        for (int i = 0; i < currentFlights.size(); i++) {
+            Flight f = currentFlights.get(i);
+            data[i][0] = f.getOrigin();
+            data[i][1] = f.getDestination();
+            data[i][2] = (f.getDate() != null) ? f.getDate().toString() : "";
+            data[i][3] = (f.getAirline() != null) ? f.getAirline().getName() : "";
+            data[i][4] = String.format("$%.2f", f.getPrice());
         }
 
         var model = new javax.swing.table.DefaultTableModel(data, cols) {

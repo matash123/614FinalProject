@@ -5,6 +5,7 @@ import java.util.List;
 import src.database.AirlineCrud;
 import src.database.AirplaneCrud;
 import src.database.FlightCrud;
+import src.events.ControllerBus;
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -57,7 +58,9 @@ public class AdminFlightController {
         //saving using FlightCrud
         FlightCrud.addFlight(flight);
 
-        //TO DO: event bus handling and how we want to send messages, like we delete ariline, flight should be modified as well
+        //publishing flight created/updated event
+        //using FLIGHTS_LOADED to notify that flights have changed
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of(flight));
 
         return flight;
     }
@@ -74,6 +77,6 @@ public class AdminFlightController {
         //GUI should handle messaging
     }
 
-    //todo cascade rules and reservation notifications
+    //todo add authorization check to verify user is FlightAgent or Admin
 }
 
