@@ -3,6 +3,7 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
+import src.components.AccountEditorPanel;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
@@ -100,10 +101,18 @@ public class AgentPanel extends DynamicPanel {
             pageController.show(panel);
         });
 
+        JButton editAccountButton = new JButton("Edit user account");
+        editAccountButton.addActionListener(e -> {
+            AccountEditorPanel panel = new AccountEditorPanel(AccountEditorPanel.Mode.AGENT);
+            panel.setPageController(pageController);
+            pageController.show(panel);
+        });
+
         JPanel buttons = new JPanel();
         buttons.setOpaque(false);
         buttons.add(viewUsersButton);
         buttons.add(searchReservationsButton);
+        buttons.add(editAccountButton);
 
         right.add(workList, BorderLayout.CENTER);
         right.add(buttons, BorderLayout.SOUTH);

@@ -18,7 +18,7 @@ public class userCRUD {
 
         try {
             String sql =
-                "SELECT id, username, password, role " +
+                "SELECT id, username, email, password, role " +
                 "FROM user " +
                 "WHERE username = ? AND active = 1";
 
@@ -29,12 +29,14 @@ public class userCRUD {
 
             if (DB.next(rs)) {
                 // User constructor: (userId, name, password, role).
-                return new User(
+                User u = new User(
                     DB.getString(rs, "id"),
                     DB.getString(rs, "username"),
                     DB.getString(rs, "password"),
                     DB.getString(rs, "role")
                 );
+                u.setEmail(DB.getString(rs, "email"));
+                return u;
             }
 
             return null;
@@ -235,12 +237,14 @@ public class userCRUD {
             ResultSet rs = DB.query(stmt);
 
             if (DB.next(rs)) {
-                return new User(
+                User u = new User(
                     DB.getString(rs, "id"),
                     DB.getString(rs, "name"),
                     DB.getString(rs, "password"),
                     DB.getString(rs, "role")
                 );
+                u.setEmail(DB.getString(rs, "email"));
+                return u;
             }
             return null;
         } catch (RuntimeException e) {
