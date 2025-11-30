@@ -6,8 +6,10 @@ import javax.swing.*;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
+import src.components.admin.AdminFlightEditorPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.models.Flight;
 
 /**
  * Admin dashboard panel.
@@ -16,7 +18,7 @@ import src.config.Theme;
  * customer and agent dashboards but is wired to admin-specific actions
  * (e.g., editing flights themselves instead of bookings).
  */
-public class AdminPanel extends MainPanel {
+public class AdminPanel extends DynamicPanel {
 
     // Core UI elements
     private JPanel headerPanel;
@@ -26,8 +28,17 @@ public class AdminPanel extends MainPanel {
     private JPanel activeArea;
     private FlightSearchPanel flightSearchPanel;
 
+    // Last theme applied to this panel; reused when swapping active views.
+    private Theme currentTheme;
+
+    // Page controller for switching the active center panel.
+    private final PageController pageController;
+
     public AdminPanel() {
         setLayout(new BorderLayout());
+
+        this.pageController = panel -> setActiveView(panel);
+
         buildHeader();
         buildActiveArea();
 
@@ -84,12 +95,29 @@ public class AdminPanel extends MainPanel {
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
             flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.ADMIN);
+            flightSearchPanel.setPageController(pageController);
 
             // Extra control that only admins see – jump to flight editor
             JButton editFlightButton = new JButton("Edit selected flight");
             editFlightButton.addActionListener(e -> {
+                Flight selected = flightSearchPanel.getSelectedFlight();
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a flight to edit.",
+                        "No flight selected",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+                }
+
+                AdminFlightEditorPanel editor = new AdminFlightEditorPanel(
+                    selected,
+                    this::showFlightSearch
+                );
+                editor.setPageController(pageController);
                 // Show the admin flight editor inside this panel's active area.
-                setActiveView(new AdminFlightEditorPanel());
+                setActiveView(editor);
             });
             flightSearchPanel.addExtraSearchControl(editFlightButton);
         }
@@ -104,11 +132,15 @@ public class AdminPanel extends MainPanel {
     // -------------------------------------------------------------
     // DYNAMIC UPDATE METHODS
     // -------------------------------------------------------------
-    public void setActiveView(JPanel p) {
+    public void setActiveView(DynamicPanel p) {
         activeArea.removeAll();
         activeArea.add(p, BorderLayout.CENTER);
         activeArea.revalidate();
         activeArea.repaint();
+
+        if (currentTheme != null) {
+            p.refreshTheme(currentTheme);
+        }
     }
 
     public void refreshUser(String name, String email, String role) {
@@ -124,6 +156,7 @@ public class AdminPanel extends MainPanel {
     // -------------------------------------------------------------
     @Override
     public void refreshTheme(Theme t) {
+        this.currentTheme = t;
         setBackground(t.bg);
         headerPanel.setBackground(t.bg);
         activeArea.setBackground(t.bg);

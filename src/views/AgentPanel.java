@@ -6,8 +6,11 @@ import javax.swing.*;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
+import src.components.agent.AgentUserListPanel;
+import src.components.agent.FlightReservationsEditorPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.models.Flight;
 
 /**
  * Agent dashboard panel.
@@ -16,7 +19,7 @@ import src.config.Theme;
  * customer dashboard but arranges the layout differently and is wired
  * to agent-specific actions (e.g., synchronous search).
  */
-public class AgentPanel extends MainPanel {
+public class AgentPanel extends DynamicPanel {
 
     // Core UI elements
     private JPanel headerPanel;
@@ -26,8 +29,17 @@ public class AgentPanel extends MainPanel {
     private JPanel activeArea;
     private FlightSearchPanel flightSearchPanel;
 
+    // Last theme applied to this panel; reused when swapping active views.
+    private Theme currentTheme;
+
+    // Page controller for switching the active center panel.
+    private final PageController pageController;
+
     public AgentPanel() {
         setLayout(new BorderLayout());
+
+        this.pageController = panel -> setActiveView(panel);
+
         buildHeader();
         buildActiveArea();
 
@@ -55,7 +67,21 @@ public class AgentPanel extends MainPanel {
         workList = new BookingList();
 
         headerPanel.add(userBox, BorderLayout.WEST);
-        headerPanel.add(workList, BorderLayout.EAST);
+
+        // Right side: work list + "view all active users" button in the header
+        JPanel right = new JPanel(new BorderLayout());
+        right.setOpaque(false);
+
+        JButton viewUsersButton = new JButton("View all active users");
+        viewUsersButton.addActionListener(e -> {
+            AgentUserListPanel userListPanel = new AgentUserListPanel();
+            pageController.show(userListPanel);
+        });
+
+        right.add(workList, BorderLayout.CENTER);
+        right.add(viewUsersButton, BorderLayout.SOUTH);
+
+        headerPanel.add(right, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
     }
@@ -84,14 +110,25 @@ public class AgentPanel extends MainPanel {
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
             flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.AGENT);
+            flightSearchPanel.setPageController(pageController);
 
-            // Extra control that only agents see – jump to booking editor
-            JButton editBookingsButton = new JButton("Edit bookings / reservations");
-            editBookingsButton.addActionListener(e -> {
-                // Show the agent booking editor inside this panel's active area.
-                setActiveView(new AgentBookingEditorPanel());
+            // Extra control that only agents see – view reservations for selected flight
+            JButton viewReservationsButton = new JButton("View reservations for selected flight");
+            viewReservationsButton.addActionListener(e -> {
+                Flight selected = flightSearchPanel.getSelectedFlight();
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a flight to view reservations.",
+                        "No flight selected",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+                }
+                FlightReservationsEditorPanel panel = new FlightReservationsEditorPanel(selected);
+                pageController.show(panel);
             });
-            flightSearchPanel.addExtraSearchControl(editBookingsButton);
+            flightSearchPanel.addExtraSearchControl(viewReservationsButton);
         }
         return flightSearchPanel;
     }
@@ -104,10 +141,16 @@ public class AgentPanel extends MainPanel {
     // -------------------------------------------------------------
     // DYNAMIC UPDATE METHODS
     // -------------------------------------------------------------
-    public void setActiveView(JPanel p) {
+    public void setActiveView(DynamicPanel p) {
         activeArea.removeAll();
         activeArea.add(p, BorderLayout.CENTER);
         activeArea.revalidate();
+
+        // Apply the currently active theme (if any) to the new view immediately.
+        if (currentTheme != null) {
+            p.refreshTheme(currentTheme);
+        }
+
         activeArea.repaint();
     }
 
@@ -124,6 +167,7 @@ public class AgentPanel extends MainPanel {
     // -------------------------------------------------------------
     @Override
     public void refreshTheme(Theme t) {
+        this.currentTheme = t;
         setBackground(t.bg);
         headerPanel.setBackground(t.bg);
         activeArea.setBackground(t.bg);

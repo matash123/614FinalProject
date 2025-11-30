@@ -2,21 +2,20 @@ package src.database;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+import java.util.ArrayList;
+import java.util.List;
 import src.models.User;
 
 public class userCRUD {
 
-    
-    //Look up an active user by username.
-     //Returns null if no user is found or an error occurs.
+    // Look up an active user by username.
+    // Returns null if no user is found or an error occurs.
     public static User getUser(String username) {
         if (username == null || username.isBlank()) {
             return null;
         }
 
         try {
-            // Now implementing the the true, 
             String sql =
                 "SELECT id, username, password, role " +
                 "FROM user " +
@@ -25,11 +24,10 @@ public class userCRUD {
             PreparedStatement stmt = DB.prepare(sql);
             DB.set(stmt, 1, username.trim());
 
-            //pulling from the db now
             ResultSet rs = DB.query(stmt);
 
             if (DB.next(rs)) {
-                // User constructor: (userId, name, password, role). This is to match our schema exactlty
+                // User constructor: (userId, name, password, role).
                 return new User(
                     DB.getString(rs, "id"),
                     DB.getString(rs, "username"),
@@ -38,14 +36,44 @@ public class userCRUD {
                 );
             }
 
-            // Quick check than can resturn null
             return null;
-        
-        //Quick runtime exception, this is a reference to CHATGPT for the idea and the help implementing
-        //This step always trips me up in writing the correct syntax
+
         } catch (RuntimeException e) {
             System.err.println("Error in userCRUD.getUser: " + e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Load all active users from the database.
+     */
+    public static List<User> findAllActive() {
+        List<User> results = new ArrayList<>();
+
+        try {
+            String sql =
+                "SELECT id, username, password, role " +
+                "FROM user " +
+                "WHERE active = 1";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            ResultSet rs = DB.query(stmt);
+
+            while (DB.next(rs)) {
+                User u = new User(
+                    DB.getString(rs, "id"),
+                    DB.getString(rs, "username"),
+                    DB.getString(rs, "password"),
+                    DB.getString(rs, "role")
+                );
+                results.add(u);
+            }
+
+        } catch (RuntimeException e) {
+            System.err.println("Error in userCRUD.findAllActive: " + e.getMessage());
+            throw e;
+        }
+
+        return results;
     }
 }

@@ -11,6 +11,8 @@ import src.config.Theme;
 import src.controllers.FlightSearchController;
 import src.factory.ControllerFactory;
 import src.models.Flight;
+import src.views.DynamicPanel;
+import src.views.PageController;
 
 
 /**
@@ -19,7 +21,7 @@ import src.models.Flight;
  * dedicated {@link FlightSearchController} (via {@link ControllerFactory})
  * so that search logic no longer flows through the top-level AppController.
  */
-public class FlightSearchPanel extends JPanel implements ThemeAware {
+public class FlightSearchPanel extends DynamicPanel {
 
     /**
      * Logical context for the search panel – allows future customization
@@ -35,6 +37,8 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
     private final Mode mode;
     /** Dedicated controller for flight search; obtained from the factory. */
     private final FlightSearchController flightSearchController;
+    /** Optional page controller so rows/actions can switch the active panel. */
+    private PageController pageController;
 
     private JTable flightTable;
     private JScrollPane tableScroll;
@@ -64,6 +68,10 @@ public class FlightSearchPanel extends JPanel implements ThemeAware {
 
         // start with an empty table
         updateTableFromFlights(new ArrayList<>());
+    }
+
+    public void setPageController(PageController pageController) {
+        this.pageController = pageController;
     }
 
     // ------------------------------------------------------------

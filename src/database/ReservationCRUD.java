@@ -148,4 +148,108 @@ public class ReservationCRUD {
 
         return results;
     }
+
+    /**
+     * Load all reservations for a given flight.
+     */
+    public static List<Reservation> findByFlightId(String flightId) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId required");
+        }
+
+        List<Reservation> results = new ArrayList<>();
+
+        try {
+            String sql =
+                "SELECT reservation_id, customer_id, flight_id, seats, status, booking_time " +
+                "FROM reservation WHERE flight_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, flightId.trim());
+
+            ResultSet rs = DB.query(stmt);
+
+            while (DB.next(rs)) {
+                String reservationId = DB.getString(rs, "reservation_id");
+                String customerId    = DB.getString(rs, "customer_id");
+                String seatsStr      = DB.getString(rs, "seats");
+                String statusStr     = DB.getString(rs, "status");
+                String bookingTime   = DB.getString(rs, "booking_time");
+
+                int seats = 0;
+                if (seatsStr != null && !seatsStr.isBlank()) {
+                    try {
+                        seats = Integer.parseInt(seatsStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                LocalDateTime bookingDateTime = null;
+                if (bookingTime != null && !bookingTime.isBlank()) {
+                    try {
+                        bookingDateTime = LocalDateTime.parse(bookingTime);
+                    } catch (Exception ignored) {}
+                }
+
+                ReservationStatus status;
+                try {
+                    status = ReservationStatus.valueOf(statusStr.toUpperCase());
+                } catch (Exception ex) {
+                    if ("booked".equalsIgnoreCase(statusStr)) {
+                        status = ReservationStatus.CONFIRMED;
+                    } else {
+                        status = ReservationStatus.CREATED;
+                    }
+                }
+
+                Flight flight = FlightCrud.findFlightById(flightId);
+                if (flight == null) {
+                    continue;
+                }
+
+                User user = new User(
+                        customerId,
+                        "Customer " + customerId,
+                        "",          // password unknown at this point
+                        "customer"   // role; stored as text in the user table
+                );
+
+                Reservation reservation =
+                        new Reservation(
+                                reservationId,
+                                user,
+                                flight,
+                                status,
+                                seats,
+                                bookingDateTime
+                        );
+
+                results.add(reservation);
+            }
+
+        } catch (RuntimeException e) {
+            System.err.println("Error loading reservations for flight " + flightId + ": " + e.getMessage());
+            throw e;
+        }
+
+        return results;
+    }
+
+    /**
+     * Delete a reservation by id.
+     */
+    public static void deleteById(String reservationId) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+
+        try {
+            String sql = "DELETE FROM reservation WHERE reservation_id = ?";
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, reservationId.trim());
+            DB.update(stmt);
+        } catch (RuntimeException e) {
+            System.err.println("Error deleting reservation " + reservationId + ": " + e.getMessage());
+            throw e;
+        }
+    }
 }

@@ -10,13 +10,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import src.components.ThemeAware;
 import src.config.Theme;
 import src.controllers.BookingController;
 import src.controllers.UserController;
 import src.factory.ControllerFactory;
 import src.models.Flight;
 import src.models.User;
+import src.views.DynamicPanel;
+import src.views.PageController;
 
 /**
  * Customer booking/payment panel shown inside the {@link src.views.CustomerPanel}
@@ -26,11 +27,13 @@ import src.models.User;
  * All domain work is delegated to the appropriate controllers obtained from
  * {@link ControllerFactory} – this panel is purely UI + orchestration.
  */
-public class CustomerBookingPanel extends JPanel implements ThemeAware {
+public class CustomerBookingPanel extends DynamicPanel {
 
     private final BookingController bookingController;
     private final UserController userController;
     private final Flight flight;
+    private final Runnable onBackToSearch;
+    private PageController pageController;
 
     private JLabel titleLabel;
     private JLabel flightSummaryLabel;
@@ -43,6 +46,7 @@ public class CustomerBookingPanel extends JPanel implements ThemeAware {
      */
     public CustomerBookingPanel(Flight flight, Runnable onBackToSearch) {
         this.flight = flight;
+        this.onBackToSearch = onBackToSearch;
         this.bookingController = ControllerFactory.getInstance().booking();
         this.userController = ControllerFactory.getInstance().user();
 
@@ -51,6 +55,10 @@ public class CustomerBookingPanel extends JPanel implements ThemeAware {
 
         buildHeader();
         buildForm(onBackToSearch);
+    }
+
+    public void setPageController(PageController pageController) {
+        this.pageController = pageController;
     }
 
     private void buildHeader() {
@@ -165,6 +173,10 @@ public class CustomerBookingPanel extends JPanel implements ThemeAware {
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE
                 );
+                // After a successful booking, return the user to flight search.
+                if (onBackToSearch != null) {
+                    onBackToSearch.run();
+                }
             } else {
                 JOptionPane.showMessageDialog(
                     this,

@@ -3,10 +3,14 @@ package src.controllers;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import src.database.PaymentCrud;
+import src.database.ReservationCRUD;
 import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
 import src.models.Flight;
+import src.models.Payment;
+import src.models.PaymentStatus;
 import src.models.Reservation;
 import src.models.ReservationStatus;
 import src.models.User;
@@ -15,13 +19,11 @@ import src.strategies.BestAvailableSeatStrategy;
 import src.strategies.DefaultPricingStrategy;
 import src.strategies.PricingStrategy;
 import src.strategies.PromoPricingDecorator;
-import src.strategies.SearchSortStrategy;
 import src.strategies.SeatSelectionStrategy;
 
 //handles booking logic
 public class BookingController {
     private PricingStrategy pricing;
-    private SearchSortStrategy sorter;
     private SeatSelectionStrategy seatStrategy;
     private final PaymentGateway paymentGateway;
 
@@ -32,7 +34,6 @@ public class BookingController {
     }
 
     public void setPricing(PricingStrategy p) { this.pricing = p; }
-    public void setSorter(SearchSortStrategy s) { this.sorter = s; }
     public void setSeatStrategy(SeatSelectionStrategy s) { this.seatStrategy = s; }
 
     public void startBooking(Flight f, User u) {
@@ -59,7 +60,7 @@ public class BookingController {
                 "not enough seats available"
             );
         }
-        //todo get actual available seat list from flight
+        // TODO: integrate with real seat map; for now use a simple fixed list.
         List<String> availableSeats = List.of("1A", "1B", "2A", "2B");
         return seatStrategy.selectSeats(seatsRequested, availableSeats);
     }
@@ -76,10 +77,17 @@ public class BookingController {
             throw new IllegalArgumentException("only customers can book flights");
         }
 
+        // ensure the flight actually has enough seats for this booking
+        if (!f.hasAvailableSeats(seats)) {
+            throw new ControllerExceptions.ControllerException(
+                ControllerExceptions.ErrorCode.INSUFFICIENT_SEATS,
+                "not enough seats available"
+            );
+        }
+
         // calculating price with optional promo
-        PricingStrategy pricingToUse = pricing;
-        // todo check for active promo and apply decorator if needed
-        BigDecimal amount = new PromoPricingDecorator(pricingToUse, BigDecimal.ZERO)
+        // TODO: check for active promo and apply decorator if needed
+        BigDecimal amount = new PromoPricingDecorator(pricing, BigDecimal.ZERO)
                 .priceFor(f, seats);
 
         // authorizing the payment
@@ -106,14 +114,29 @@ public class BookingController {
 
         // creating reservation entity with confirmed status
         String reservationId = "RES_" + System.currentTimeMillis();
+        LocalDateTime now = LocalDateTime.now();
         Reservation reservation = new Reservation(
             reservationId,
             u,
             f,
             ReservationStatus.CONFIRMED,
             seats,
-            LocalDateTime.now()
+            now
         );
+
+        // persist reservation so that payment FK can point to it
+        ReservationCRUD.saveReservation(reservation);
+
+        // create and persist payment record
+        String paymentId = "PAY_" + System.currentTimeMillis();
+        Payment payment = new Payment(
+            paymentId,
+            reservation,
+            amount.doubleValue(),
+            PaymentStatus.PAID,
+            now
+        );
+        PaymentCrud.savePayment(payment);
 
         // publishing reservation created event
         ControllerBus.getInstance().publish(EventType.RESERVATION_CREATED, reservation);

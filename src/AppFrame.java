@@ -2,17 +2,23 @@ package src;
 
 import src.config.Theme;
 import src.controllers.AppController;
-import src.views.MainPanel;
+import src.views.DynamicPanel;
 
 public interface AppFrame {
 
-    void setView(MainPanel p);
+    void setView(DynamicPanel p);
 
-    MainPanel makeLoginPanel(AppController appController);
-    MainPanel makeCustomerPanel();
-    MainPanel makeAgentPanel();
-    MainPanel makeAdminPanel();
+    DynamicPanel makeLoginPanel(AppController appController);
+    DynamicPanel makeCustomerPanel();
+    DynamicPanel makeAgentPanel();
+    DynamicPanel makeAdminPanel();
 
     void applyThemeToUI(Theme t);
 
+    /**
+     * Ask the currently active main panel to refresh its data from controllers.
+     * Panels are responsible for hard-coding update calls to their child
+     * components (e.g., header widgets, booking lists).
+     */
+    void updateCurrentView();
 }
