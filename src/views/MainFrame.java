@@ -3,12 +3,13 @@ package src.views;
 import java.awt.*;
 import javax.swing.*;
 import src.AppFrame;
+import src.components.Updatable;
 import src.config.Theme;
 import src.controllers.AppController;
 
 public class MainFrame extends JFrame implements AppFrame {
 
-    private MainPanel current;
+    private DynamicPanel current;
 
     public MainFrame() {
         super("Flight Reservation System");
@@ -21,7 +22,7 @@ public class MainFrame extends JFrame implements AppFrame {
     }
 
     @Override
-    public void setView(MainPanel p) {
+    public void setView(DynamicPanel p) {
         this.current = p;
 
         getContentPane().removeAll();
@@ -35,28 +36,36 @@ public class MainFrame extends JFrame implements AppFrame {
         if (this.current != null){
             System.out.println("applying new theme: \n");
             t.printTheme();
-             current.refreshTheme(t);
-             repaint();
+            current.refreshTheme(t);
+            repaint();
         }
     }
 
     @Override
-    public MainPanel makeLoginPanel(AppController appController) {
+    public DynamicPanel makeLoginPanel(AppController appController) {
         return new LoginPanel(appController);
     }
 
     @Override
-    public MainPanel makeCustomerPanel(){
+    public DynamicPanel makeCustomerPanel(){
         return new CustomerPanel();
     }
 
     @Override
-    public MainPanel makeAgentPanel() {
+    public DynamicPanel makeAgentPanel() {
         return new AgentPanel();
     }
 
     @Override
-    public MainPanel makeAdminPanel() {
+    public DynamicPanel makeAdminPanel() {
         return new AdminPanel();
+    }
+
+    @Override
+    public void updateCurrentView() {
+        if (current instanceof Updatable updatable) {
+            updatable.refreshData();
+            repaint();
+        }
     }
 }

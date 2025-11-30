@@ -8,8 +8,7 @@ import src.controllers.UserController;
 import src.factory.ControllerFactory;
 import src.schemas.loginResult;
 
-
-public class LoginPanel extends MainPanel {
+public class LoginPanel extends DynamicPanel {
 
     private JLabel title, userLabel, passLabel, errorLabel;
     private JTextField userField;

@@ -3,8 +3,8 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.components.BookingList;
 import src.components.ThemeAware;
+import src.components.UserBookingList;
 import src.components.UserBox;
 import src.components.customer.CustomerBookingPanel;
 import src.components.customer.FlightSearchPanel;
@@ -17,29 +17,29 @@ import src.models.Flight;
  * - Top header: user info + booking list
  * - Center dynamic area
  */
-public class CustomerPanel extends MainPanel {
+public class CustomerPanel extends DynamicPanel {
 
     // Core UI elements
     private FlightSearchPanel flightSearchPanel;
     private JPanel headerPanel;
     private UserBox userBox;
-    private BookingList bookingList;
-
+    private UserBookingList bookingList;
 
     private JPanel activeArea;
 
+    // Last theme applied to this panel; reused when swapping active views.
+    private Theme currentTheme;
+
+    // Page controller for switching the active center panel.
+    private final PageController pageController;
+
     public CustomerPanel() {
         setLayout(new BorderLayout());
+
+        this.pageController = panel -> setActiveView(panel);
+
         buildHeader();
         buildActiveArea();
-
-        // Temporary placeholder initialization until actions layer is ready
-        userBox.setUser("John Doe", "john@example.com", "CUSTOMER");
-        bookingList.setBookings(List.of(
-            "YYC → YVR | 2025-12-01",
-            "YYC → LAX | 2025-12-10",
-            "YVR → NRT | 2026-01-03"
-        ));
 
         // Default content: show the reusable customer flight search view
         showFlightSearch();
@@ -55,7 +55,7 @@ public class CustomerPanel extends MainPanel {
 
         // New modular components
         userBox = new UserBox();
-        bookingList = new BookingList();
+        bookingList = new UserBookingList();
 
         headerPanel.add(userBox, BorderLayout.WEST);
         headerPanel.add(bookingList, BorderLayout.EAST);
@@ -87,6 +87,7 @@ public class CustomerPanel extends MainPanel {
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
             flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER);
+            flightSearchPanel.setPageController(pageController);
 
             // Extra control for customers – jump to booking for selected flight
             JButton bookButton = new JButton("Book selected flight");
@@ -102,10 +103,12 @@ public class CustomerPanel extends MainPanel {
                     return;
                 }
                 // Switch the active area to the booking panel, passing the Flight model.
-                setActiveView(new CustomerBookingPanel(
+                CustomerBookingPanel bookingPanel = new CustomerBookingPanel(
                     selected,
                     this::showFlightSearch
-                ));
+                );
+                bookingPanel.setPageController(pageController);
+                setActiveView(bookingPanel);
             });
             flightSearchPanel.addExtraSearchControl(bookButton);
         }
@@ -120,11 +123,16 @@ public class CustomerPanel extends MainPanel {
     // -------------------------------------------------------------
     // DYNAMIC UPDATE METHODS
     // -------------------------------------------------------------
-    public void setActiveView(JPanel p) {
+    public void setActiveView(DynamicPanel p) {
         activeArea.removeAll();
         activeArea.add(p, BorderLayout.CENTER);
         activeArea.revalidate();
         activeArea.repaint();
+
+        // Ensure the newly active view picks up the current theme immediately.
+        if (currentTheme != null) {
+            p.refreshTheme(currentTheme);
+        }
     }
 
     public void refreshUser(String name, String email, String role) {
@@ -132,6 +140,8 @@ public class CustomerPanel extends MainPanel {
     }
 
     public void refreshBookings(List<String> bookings) {
+        // Delegate to the bookings component; allows external callers to
+        // push preformatted rows if they really need to.
         bookingList.setBookings(bookings);
     }
 
@@ -140,6 +150,7 @@ public class CustomerPanel extends MainPanel {
     // -------------------------------------------------------------
     @Override
     public void refreshTheme(Theme t) {
+        this.currentTheme = t;
         setBackground(t.bg);
         headerPanel.setBackground(t.bg);
         activeArea.setBackground(t.bg);
@@ -159,4 +170,10 @@ public class CustomerPanel extends MainPanel {
         repaint();
     }
 
+    @Override
+    public void refreshData() {
+        // Hard-code updates to header components that should react to
+        // domain events (e.g., new bookings for the current user).
+        bookingList.refreshData();
+    }
 }
