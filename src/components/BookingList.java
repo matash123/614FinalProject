@@ -1,11 +1,12 @@
 package src.components;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import javax.swing.*;
 import src.config.Theme;
+import src.views.DynamicPanel;
 
-public class BookingList extends JPanel implements ThemeAware {
+public class BookingList extends DynamicPanel {
 
     private JPanel list;
     private JScrollPane scroll;
@@ -51,5 +52,8 @@ public class BookingList extends JPanel implements ThemeAware {
             c.setForeground(t.fg);
             c.setBackground(t.bg);
         }
+
     }
+
+
 }

@@ -17,6 +17,7 @@ public class ReservationCRUD {
      * We only store the link to customer + flight (via IDs).
      */
     public static void saveReservation(Reservation r) {
+        System.out.println("In saving function, saving reservation: " + r.getReservationId());
         if (r == null) {
             throw new IllegalArgumentException("reservation cannot be null");
         }
@@ -31,6 +32,7 @@ public class ReservationCRUD {
                 ") VALUES (?, ?, ?, ?, ?, ?)";
 
             PreparedStatement stmt = DB.prepare(sql);
+            
             DB.set(stmt, 1, r.getReservationId());
             DB.set(stmt, 2, r.getUser().getUserId());
             DB.set(stmt, 3, r.getFlight().getFlightId());
@@ -41,7 +43,7 @@ public class ReservationCRUD {
             LocalDateTime ts = r.getBookingDateTime();
             DB.set(stmt, 6, ts != null ? ts.toString() : null);
             
-
+            System.out.println("reservation stmt: " + stmt);
             DB.update(stmt);
 
         } catch (RuntimeException e) {
@@ -150,6 +152,92 @@ public class ReservationCRUD {
         return results;
     }
 
+    /**
+     * Load all reservations for a given flight (flight_id).
+     */
+    public static List<Reservation> findByFlightId(String flightId) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId required");
+        }
+
+        List<Reservation> results = new ArrayList<>();
+
+        try {
+            String sql =
+                "SELECT reservation_id, customer_id, flight_id, seats, status, booking_time " +
+                "FROM reservation WHERE flight_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, flightId.trim());
+
+            ResultSet rs = DB.query(stmt);
+
+            while (DB.next(rs)) {
+                String reservationId = DB.getString(rs, "reservation_id");
+                String customerId    = DB.getString(rs, "customer_id");
+                String dbFlightId    = DB.getString(rs, "flight_id");
+                String seatsStr      = DB.getString(rs, "seats");
+                String statusStr     = DB.getString(rs, "status");
+                String bookingTime   = DB.getString(rs, "booking_time");
+
+                int seats = 0;
+                if (seatsStr != null && !seatsStr.isBlank()) {
+                    try {
+                        seats = Integer.parseInt(seatsStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                LocalDateTime bookingDateTime = null;
+                if (bookingTime != null && !bookingTime.isBlank()) {
+                    try {
+                        bookingDateTime = LocalDateTime.parse(bookingTime);
+                    } catch (Exception ignored) {}
+                }
+
+                ReservationStatus status;
+                try {
+                    status = ReservationStatus.valueOf(statusStr.toUpperCase());
+                } catch (Exception ex) {
+                    if ("booked".equalsIgnoreCase(statusStr)) {
+                        status = ReservationStatus.CONFIRMED;
+                    } else {
+                        status = ReservationStatus.CREATED;
+                    }
+                }
+
+                Flight flight = FlightCrud.findFlightById(dbFlightId);
+                if (flight == null) {
+                    continue;
+                }
+
+                User user = new User(
+                        customerId,
+                        "Customer " + customerId,
+                        "",
+                        "customer"
+                );
+
+                Reservation reservation =
+                        new Reservation(
+                                reservationId,
+                                user,
+                                flight,
+                                status,
+                                seats,
+                                bookingDateTime
+                        );
+
+                results.add(reservation);
+            }
+
+        } catch (RuntimeException e) {
+            System.err.println("Error loading reservations for flight " + flightId + ": " + e.getMessage());
+            throw e;
+        }
+
+        return results;
+    }
+
     //See over dev we realized that we needed a getReservationbyID, so it can get a single object so of the
     //customer reservation object so it can be accessed by PAYMENT, I tried using our list but that didnt make sense either
     // why would we build all reservation objects only to pull one
@@ -159,7 +247,7 @@ public class ReservationCRUD {
     //again its very derivative of what we did the ocnstruction of all the previous CRUD, however
     //CHATGPT deserves a ton of credit for it's implementation.
 
-    public static FlightCustomerReservation getReservationById(String reservationId) {
+    public static Reservation getReservationById(String reservationId) {
     if (reservationId == null || reservationId.isBlank()) {
         throw new IllegalArgumentException("reservationId required");
     }
@@ -216,16 +304,18 @@ public class ReservationCRUD {
             return null;
         }
 
-        // Minimal Customer object (you can refine later)
-        Customer customer = new Customer(
+        // Build a lightweight User object; customer-specific details
+        // can be resolved later if/when needed.
+        User user = new User(
                 customerId,
                 "Customer " + customerId,
-                "" // password unknown here
+                "",          // password unknown at this point
+                "customer"   // role; stored as text in the user table
         );
 
-        return new FlightCustomerReservation(
+        return new Reservation(
                 resId,
-                customer,
+                user,
                 flight,
                 status,
                 seats,
@@ -236,6 +326,51 @@ public class ReservationCRUD {
         System.err.println("Error loading reservation " + reservationId + ": " + e.getMessage());
         throw e;
     }
-}
+    }
 
+    /**
+     * Update the status of a reservation.
+     */
+    public static void updateStatus(String reservationId, ReservationStatus newStatus) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+        if (newStatus == null) {
+            throw new IllegalArgumentException("newStatus required");
+        }
+
+        try {
+            String sql = "UPDATE reservation SET status = ? WHERE reservation_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, newStatus.name());
+            DB.set(stmt, 2, reservationId.trim());
+
+            DB.update(stmt);
+        } catch (RuntimeException e) {
+            System.err.println("Error updating reservation status for " + reservationId + ": " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Delete a reservation row by ID.
+     */
+    public static void deleteById(String reservationId) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+
+        try {
+            String sql = "DELETE FROM reservation WHERE reservation_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, reservationId.trim());
+
+            DB.update(stmt);
+        } catch (RuntimeException e) {
+            System.err.println("Error deleting reservation " + reservationId + ": " + e.getMessage());
+            throw e;
+        }
+    }
 }

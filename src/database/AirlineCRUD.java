@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import src.models.Airline;
 
-public class AirlineCrud {
-
+public class AirlineCRUD {
 
     //This is very much to be executed again by SYSTEM ADMINISTRATOR
 
