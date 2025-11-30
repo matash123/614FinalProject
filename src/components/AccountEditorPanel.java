@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import src.config.Theme;
+import src.controllers.AppController;
 import src.controllers.UserController;
 import src.database.CustomerCRUD;
 import src.database.userCRUD;
@@ -432,6 +433,13 @@ public class AccountEditorPanel extends DynamicPanel {
                 loadCurrentUser();
             } else {
                 loadUserById(loadedUserId);
+            }
+
+            // Also refresh the outer app view so header UserBox components pick
+            // up the updated name/email/role for the current session user.
+            AppController app = AppController.getInstance();
+            if (app != null) {
+                app.updateAppView();
             }
 
         } catch (SecurityException ex) {

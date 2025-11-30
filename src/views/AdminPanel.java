@@ -10,7 +10,9 @@ import src.components.admin.AdminFlightEditorPanel;
 import src.components.admin.PromotionalNewsEditor;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.factory.ControllerFactory;
 import src.models.Flight;
+import src.models.User;
 
 /**
  * Admin dashboard panel.
@@ -42,14 +44,6 @@ public class AdminPanel extends DynamicPanel {
 
         buildHeader();
         buildActiveArea();
-
-        // Temporary placeholder data until wired to real session/user info
-        userBox.setUser("System Admin", "admin@example.com", "ADMIN");
-        taskList.setBookings(List.of(
-            "Review schedule changes",
-            "Audit recent reservations",
-            "Manage airline & airplane catalog"
-        ));
 
         // Default content: show the reusable admin flight search view
         showFlightSearch();
@@ -196,5 +190,19 @@ public class AdminPanel extends DynamicPanel {
         }
 
         repaint();
+    }
+
+    @Override
+    public void refreshData() {
+        // Update header user box based on the currently logged-in user.
+        User currentUser = ControllerFactory.getInstance()
+                .user()
+                .getCurrentUser();
+        if (currentUser != null) {
+            String name = currentUser.getName() != null ? currentUser.getName() : currentUser.getUserId();
+            String email = currentUser.getEmail() != null ? currentUser.getEmail() : "";
+            String role = currentUser.getRole() != null ? currentUser.getRole() : "";
+            userBox.setUser(name, email, role);
+        }
     }
 }

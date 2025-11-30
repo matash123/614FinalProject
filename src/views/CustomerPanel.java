@@ -1,20 +1,20 @@
 package src.views;
 
 import java.awt.*;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.swing.*;
 import src.components.AccountEditorPanel;
 import src.components.ThemeAware;
-import src.components.UserBookingList;
 import src.components.UserBox;
 import src.components.customer.CustomerBookingPanel;
+import src.components.customer.CustomerPromotionDetailsPanel;
+import src.components.customer.CustomerReservationsPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
-import src.database.ReservationCRUD;
+import src.controllers.PromotionController;
 import src.factory.ControllerFactory;
 import src.models.Flight;
-import src.models.Reservation;
+import src.models.Promotion;
+import src.models.User;
 
 
 /**
@@ -28,7 +28,9 @@ public class CustomerPanel extends DynamicPanel {
     private FlightSearchPanel flightSearchPanel;
     private JPanel headerPanel;
     private UserBox userBox;
-    private UserBookingList bookingList;
+    private CustomerReservationsPanel reservationsPanel;
+    private JButton latestPromoButton;
+    private JComboBox<Promotion> promoDropdown;
 
     private JPanel activeArea;
 
@@ -38,10 +40,13 @@ public class CustomerPanel extends DynamicPanel {
     // Page controller for switching the active center panel.
     private final PageController pageController;
 
+    private final PromotionController promotionController;
+
     public CustomerPanel() {
         setLayout(new BorderLayout());
 
         this.pageController = panel -> setActiveView(panel);
+        this.promotionController = ControllerFactory.getInstance().promotions();
 
         buildHeader();
         buildActiveArea();
@@ -60,7 +65,8 @@ public class CustomerPanel extends DynamicPanel {
 
         // New modular components
         userBox = new UserBox();
-        bookingList = new UserBookingList();
+        reservationsPanel = new CustomerReservationsPanel();
+        reservationsPanel.setPageController(pageController);
 
         // Flight search + account buttons
         JPanel buttonsPanel = new JPanel();
@@ -83,8 +89,44 @@ public class CustomerPanel extends DynamicPanel {
         leftPanel.add(userBox, BorderLayout.CENTER);
         leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
+        // Center header: promotional news
+        JPanel promoPanel = new JPanel();
+        promoPanel.setOpaque(false);
+
+        JLabel promoLabel = new JLabel("Latest promotion:");
+        latestPromoButton = new JButton("No current promotions");
+        latestPromoButton.setEnabled(false);
+
+        JLabel allLabel = new JLabel("All active promos:");
+        promoDropdown = new JComboBox<>();
+        promoDropdown.setEnabled(false);
+
+        promoPanel.add(promoLabel);
+        promoPanel.add(latestPromoButton);
+        promoPanel.add(allLabel);
+        promoPanel.add(promoDropdown);
+
+        // Wire actions for promotions
+        latestPromoButton.addActionListener(e -> {
+            Promotion selected = (Promotion) promoDropdown.getSelectedItem();
+            if (selected == null) {
+                selected = promotionController.getMostRecentActivePromotion();
+            }
+            if (selected != null) {
+                showPromotionDetails(selected);
+            }
+        });
+
+        promoDropdown.addActionListener(e -> {
+            Promotion selected = (Promotion) promoDropdown.getSelectedItem();
+            if (selected != null) {
+                showPromotionDetails(selected);
+            }
+        });
+
         headerPanel.add(leftPanel, BorderLayout.WEST);
-        headerPanel.add(bookingList, BorderLayout.EAST);
+        headerPanel.add(promoPanel, BorderLayout.CENTER);
+        headerPanel.add(reservationsPanel, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
     }
@@ -159,16 +201,13 @@ public class CustomerPanel extends DynamicPanel {
         if (currentTheme != null) {
             p.refreshTheme(currentTheme);
         }
+
+        p.refreshData();
     }
 
     public void refreshUser(String name, String email, String role) {
-        userBox.setUser(name, email, role);
-    }
 
-    public void refreshBookings(List<String> bookings) {
-        // Delegate to the bookings component; allows external callers to
-        // push preformatted rows if they really need to.
-        bookingList.setBookings(bookings);
+        userBox.setUser(name, email, role);
     }
 
     // -------------------------------------------------------------
@@ -183,7 +222,15 @@ public class CustomerPanel extends DynamicPanel {
 
         // Refresh header components
         if (userBox instanceof ThemeAware ta1) ta1.refreshTheme(t);
-        if (bookingList instanceof ThemeAware ta2) ta2.refreshTheme(t);
+        if (reservationsPanel instanceof ThemeAware ta2) ta2.refreshTheme(t);
+        if (latestPromoButton != null) {
+            latestPromoButton.setBackground(t.buttonBg);
+            latestPromoButton.setForeground(t.buttonFg);
+        }
+        if (promoDropdown != null) {
+            promoDropdown.setBackground(t.inputBg);
+            promoDropdown.setForeground(t.inputFg);
+        }
 
         // Refresh active component inside activeArea
         if (activeArea.getComponentCount() > 0) {
@@ -200,7 +247,69 @@ public class CustomerPanel extends DynamicPanel {
     public void refreshData() {
         // Hard-code updates to header components that should react to
         // domain events (e.g., new bookings for the current user).
-       List<Reservation> reservations = ReservationCRUD.findByUserId(ControllerFactory.getInstance().user().getCurrentUser().getUserId());
-       refreshBookings(reservations.stream().map(Reservation::getReservationId).collect(Collectors.toList()));
+        User currentUser = ControllerFactory.getInstance()
+                .user()
+                .getCurrentUser();
+        if (currentUser != null) {
+            String name = currentUser.getName() != null ? currentUser.getName() : currentUser.getUserId();
+            String email = currentUser.getEmail() != null ? currentUser.getEmail() : "";
+            String role = currentUser.getRole() != null ? currentUser.getRole() : "";
+            userBox.setUser(name, email, role);
+        }
+
+        // Header reservations table will pull data from controllers/CRUD.
+        if (reservationsPanel != null) {
+            reservationsPanel.refreshData();
+        }
+
+        refreshPromotionsHeader();
+    }
+
+    private void refreshPromotionsHeader() {
+        if (promotionController == null || latestPromoButton == null || promoDropdown == null) {
+            return;
+        }
+
+        java.util.List<Promotion> activePromos = promotionController.getActivePromotions();
+
+        promoDropdown.removeAllItems();
+
+        if (activePromos.isEmpty()) {
+            latestPromoButton.setText("No current promotions");
+            latestPromoButton.setEnabled(false);
+            promoDropdown.setEnabled(false);
+            return;
+        }
+
+        for (Promotion p : activePromos) {
+            promoDropdown.addItem(p);
+        }
+
+        Promotion latest = promotionController.getMostRecentActivePromotion();
+        if (latest != null) {
+            latestPromoButton.setText(latest.getTitle());
+            latestPromoButton.setEnabled(true);
+            promoDropdown.setSelectedItem(latest);
+            promoDropdown.setEnabled(true);
+        } else {
+            latestPromoButton.setText("No current promotions");
+            latestPromoButton.setEnabled(false);
+            promoDropdown.setEnabled(false);
+        }
+    }
+
+    private void showPromotionDetails(Promotion promotion) {
+        if (promotion == null) {
+            JOptionPane.showMessageDialog(
+                this,
+                "No promotion selected.",
+                "No promotion",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        CustomerPromotionDetailsPanel panel = new CustomerPromotionDetailsPanel(promotion);
+        setActiveView(panel);
     }
 }

@@ -6,7 +6,8 @@ package src.models;
 public enum PaymentStatus {
     CREATED,
     PAID,
-    FAILED
+    FAILED,
+    CANCELLED
 }
 
 

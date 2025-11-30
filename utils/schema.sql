@@ -93,6 +93,7 @@ CREATE TABLE payment (
     amount         REAL NOT NULL,      -- ↔ Payment.amount
     status         TEXT NOT NULL,      -- ↔ Payment.status (enum)
     timestamp      TEXT,               -- ↔ Payment.timestamp
+    credit_card    TEXT,               -- ↔ Payment.creditCardNumber
     FOREIGN KEY (reservation_id) REFERENCES reservation(reservation_id)
 );
 
@@ -163,9 +164,9 @@ INSERT INTO reservation (reservation_id, customer_id, flight_id, seats, status, 
 ('R003', '2', 'FL300', 1, 'cancelled','2025-11-03T09:15:00');
 
 -- Payments
-INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp) VALUES
-('P001', 'R001', 199.99, 'paid',  '2025-11-01T10:05:00'),
-('P002', 'R002', 249.50, 'paid',  '2025-11-02T11:35:00');
+INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp, credit_card) VALUES
+('P001', 'R001', 199.99, 'paid',  '2025-11-01T10:05:00', '4111 1111 1111 1111'),
+('P002', 'R002', 249.50, 'paid',  '2025-11-02T11:35:00', '5555 4444 3333 1111');
 
 -- Promotions
 INSERT INTO promotion (promotion_id, title, message, start_date, end_date) VALUES

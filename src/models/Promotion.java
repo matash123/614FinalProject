@@ -28,6 +28,13 @@ public class Promotion {
     public void setMessage(String message) { this.message = message; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    @Override
+    public String toString() {
+        return title != null && !title.isBlank()
+            ? title
+            : promotionId != null ? promotionId : "Promotion";
+    }
 }
 
 

@@ -10,6 +10,11 @@ public class UserController {
     public User user;
 
     public User getCurrentUser() {
+        //need to first reget user from db ffrom user id to update data
+        user = userCRUD.getUserById(user.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException("user not found");
+        }
         return user;
     }
 
@@ -137,6 +142,13 @@ public class UserController {
             }
         }
         return success;
+    }
+
+    /**
+     * Clear the current logged-in user (used on logout).
+     */
+    public void clearCurrentUser() {
+        this.user = null;
     }
 }
 

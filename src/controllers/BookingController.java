@@ -1,6 +1,7 @@
 package src.controllers;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import src.database.PaymentCRUD;
 import src.database.ReservationCRUD;
 import src.models.Customer;
@@ -115,16 +116,113 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
             reservation,
             totalAmount,
             PaymentStatus.PAID,
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            cardToken
     );
 
     // Save payment directly via CRUD
     PaymentCRUD.insertPayment(payment);
 
-    
+    // Ask the top-level app controller to refresh the current view
+    AppController app = AppController.getInstance();
+    if (app != null) {
+        app.updateAppView();
+    }
+
     return true;
     }
 
+    /**
+     * Update the number of seats on an existing reservation, ensuring that
+     * the acting user owns the reservation.
+     */
+    public void updateReservationSeats(String reservationId, int newSeats, User actor) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId is required");
+        }
+        if (actor == null || actor.getUserId() == null || actor.getUserId().isBlank()) {
+            throw new IllegalArgumentException("actor user is required");
+        }
+        if (newSeats <= 0) {
+            throw new IllegalArgumentException("Seats must be positive");
+        }
+
+        Reservation existing = ReservationCRUD.getReservationById(reservationId);
+        if (existing == null) {
+            throw new IllegalArgumentException("Reservation not found: " + reservationId);
+        }
+
+        User resUser = existing.getUser();
+        if (resUser == null || resUser.getUserId() == null ||
+            !actor.getUserId().equals(resUser.getUserId())) {
+            throw new SecurityException("You can only modify your own reservations.");
+        }
+
+        // Look up the latest payment for this reservation so we can reuse
+        // the stored credit card number when re-booking.
+        List<Payment> payments = PaymentCRUD.getPaymentsForReservation(reservationId);
+        String cardNumber = null;
+        LocalDateTime latestTs = null;
+        Payment latestPayment = null;
+        for (Payment p : payments) {
+            if (p == null) continue;
+            LocalDateTime ts = p.getTimestamp();
+            if (ts == null) {
+                continue;
+            }
+            if (latestTs == null || ts.isAfter(latestTs)) {
+                latestTs = ts;
+                cardNumber = p.getCreditCardNumber();
+                latestPayment = p;
+            }
+        }
+
+        if (latestPayment == null || cardNumber == null || cardNumber.isBlank()) {
+            throw new IllegalStateException("No previous payment with a stored credit card was found for this reservation.");
+        }
+
+        // Mark the old payment as cancelled before creating the new one.
+        PaymentCRUD.updatePaymentStatus(latestPayment.getPaymentId(), PaymentStatus.CANCELLED);
+
+        // First cancel the existing reservation record.
+        cancelReservation(reservationId, actor);
+
+        // Then create a new booking on the same flight with the new seat
+        // count, reusing the stored credit card number.
+        Flight flight = existing.getFlight();
+        confirmBooking(cardNumber, flight, actor, newSeats);
+    }
+
+    /**
+     * Cancel an existing reservation by setting its status to CANCELLED,
+     * ensuring that the acting user owns the reservation.
+     */
+    public void cancelReservation(String reservationId, User actor) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId is required");
+        }
+        if (actor == null || actor.getUserId() == null || actor.getUserId().isBlank()) {
+            throw new IllegalArgumentException("actor user is required");
+        }
+
+        Reservation existing = ReservationCRUD.getReservationById(reservationId);
+        if (existing == null) {
+            throw new IllegalArgumentException("Reservation not found: " + reservationId);
+        }
+
+        User resUser = existing.getUser();
+        if (resUser == null || resUser.getUserId() == null ||
+            !actor.getUserId().equals(resUser.getUserId())) {
+            throw new SecurityException("You can only cancel your own reservations.");
+        }
+
+        ReservationCRUD.updateStatus(reservationId, ReservationStatus.CANCELLED);
+
+        AppController app = AppController.getInstance();
+        if (app != null) {
+            app.updateAppView();
+        }
+    }
 }
 
 

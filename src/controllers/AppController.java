@@ -2,9 +2,7 @@ package src.controllers;
 
 import src.AppFrame;
 import src.config.Theme;
-import src.events.ControllerBus;
-import src.events.ControllerBus.EventType;
-import src.events.Observer;
+import src.factory.ControllerFactory;
 import src.models.User;
 
 /**
@@ -17,16 +15,22 @@ import src.models.User;
  * directly to validate credentials and then invoke {@link #onLoginSuccess(User)}
  * on success.
  */
-public class AppController implements Observer {
+public class AppController {
     private Theme theme;
     private AppFrame mf;
+    private static AppController INSTANCE;
 
     public AppController(Theme t){
         this.theme = t;
+        INSTANCE = this;
     }
 
     public void setMainFrame(AppFrame frame) {
         this.mf = frame;
+    }
+
+    public static AppController getInstance() {
+        return INSTANCE;
     }
 
     public void start() {
@@ -52,11 +56,6 @@ public class AppController implements Observer {
             return;
         }
 
-        // We only care about reservation updates for logged-in customers.
-        // Clear any previous subscription first (e.g., when switching roles).
-        ControllerBus bus = ControllerBus.getInstance();
-        bus.unsubscribe(EventType.RESERVATION_CREATED, this);
-
         String role = user.getRole();
         if ("AGENT".equalsIgnoreCase(role)) {
             mf.setView(mf.makeAgentPanel());
@@ -65,11 +64,27 @@ public class AppController implements Observer {
         } else {
             // Default to customer experience for now.
             mf.setView(mf.makeCustomerPanel());
-
-            // Only subscribe for customers so booking-related updates
-            // (e.g., RESERVATION_CREATED) trigger header/booking list refreshes.
-            bus.subscribe(EventType.RESERVATION_CREATED, this);
         }
+        mf.applyThemeToUI(this.theme);
+        // Ensure the new main view initializes its header and data from controllers.
+        updateAppView();
+    }
+
+    /**
+     * Log the current user out and return to the login screen.
+     * Clears the current user in {@link src.controllers.UserController}
+     * and resets the main frame view to the login panel.
+     */
+    public void logout() {
+        // Clear current user in the dedicated user controller.
+        ControllerFactory.getInstance().user().clearCurrentUser();
+
+        if (mf == null) {
+            return;
+        }
+
+        // Return to the login panel.
+        mf.setView(mf.makeLoginPanel(this));
         mf.applyThemeToUI(this.theme);
     }
 
@@ -97,15 +112,5 @@ public class AppController implements Observer {
         if (mf != null) {
             mf.applyThemeToUI(this.theme);
         }
-    }
-
-    // ------------------------------------------------------------
-    // OBSERVER: RELOAD ON INTERESTING EVENTS
-    // ------------------------------------------------------------
-    @Override
-    public void update(Object event) {
-        // For now, any RESERVATION_CREATED event results in the current view
-        // being updated so components such as booking lists can refresh.
-        updateAppView();
     }
 }

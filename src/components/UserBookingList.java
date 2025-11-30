@@ -42,7 +42,7 @@ public class UserBookingList extends JPanel implements ThemeAware, Updatable, Ob
 
         this.innerList = new BookingList();
         this.userController = ControllerFactory.getInstance().user();
-        this.customerController = new CustomerController();
+        this.customerController = ControllerFactory.getInstance().customer();
 
         add(innerList, BorderLayout.CENTER);
 
@@ -113,7 +113,8 @@ public class UserBookingList extends JPanel implements ThemeAware, Updatable, Ob
                 String seatLabel = seats == 1 ? "seat" : "seats";
 
                 return String.format(
-                    "%s → %s | %s | %d %s | %s",
+                    "%s - %s → %s | %s | %d %s | %s",
+                    r.getReservationId(),
                     origin,
                     dest,
                     date,
