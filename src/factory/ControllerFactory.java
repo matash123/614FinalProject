@@ -1,6 +1,7 @@
 package src.factory;
 
 import src.controllers.AdminFlightController;
+import src.controllers.AgentController;
 import src.controllers.AppContext;
 import src.controllers.AuthController;
 import src.controllers.BookingController;
@@ -17,6 +18,7 @@ public class ControllerFactory {
     private final BookingController bookingController;
     private final PaymentController paymentController;
     private final AdminFlightController adminFlightController;
+    private final AgentController agentController;
     private final UserController userController;
     //todo add others later
 
@@ -27,6 +29,7 @@ public class ControllerFactory {
         this.bookingController = new BookingController();
         this.paymentController = new PaymentController(AppContext.getInstance().paymentGateway());
         this.adminFlightController = new AdminFlightController();
+        this.agentController = new AgentController();
         this.userController = new UserController();
         //todo init rest
     }
@@ -43,6 +46,7 @@ public class ControllerFactory {
     public BookingController booking() { return bookingController; }
     public PaymentController payments() { return paymentController; }
     public AdminFlightController adminFlights() { return adminFlightController; }
+    public AgentController agent() { return agentController; }
     public UserController user() { return userController; }
     //todo expose others
 }

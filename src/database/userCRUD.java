@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import src.models.User;
 
 public class userCRUD {
@@ -75,5 +76,58 @@ public class userCRUD {
         }
 
         return results;
+    }
+
+    /**
+     * Create a new active customer user with the given username and password.
+     *
+     * For now we treat "name" and "username" as the same display value and
+     * do not require an email address.
+     */
+    public static User createCustomer(String username, String password) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("username is required");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("password is required");
+        }
+
+        try {
+            // Ensure the username is unique.
+            String checkSql = "SELECT 1 FROM user WHERE username = ?";
+            PreparedStatement checkStmt = DB.prepare(checkSql);
+            DB.set(checkStmt, 1, username.trim());
+            ResultSet rs = DB.query(checkStmt);
+            if (DB.next(rs)) {
+                throw new IllegalArgumentException("That username is already taken.");
+            }
+
+            String id = "CUST_" + UUID.randomUUID();
+
+            String insertSql =
+                "INSERT INTO user (id, name, username, email, password, active, role) " +
+                "VALUES (?, ?, ?, ?, ?, 1, 'customer')";
+
+            PreparedStatement insertStmt = DB.prepare(insertSql);
+            DB.set(insertStmt, 1, id);
+            // For now, use the username for both name and username columns.
+            DB.set(insertStmt, 2, username.trim());
+            DB.set(insertStmt, 3, username.trim());
+            DB.set(insertStmt, 4, null);          // email optional / unused for now
+            DB.set(insertStmt, 5, password);      // plain-text for now, matches sample data
+
+            DB.update(insertStmt);
+
+            // Also insert into the customer subtype table so relationships remain consistent.
+            PreparedStatement subtypeStmt = DB.prepare("INSERT INTO customer (id) VALUES (?)");
+            DB.set(subtypeStmt, 1, id);
+            DB.update(subtypeStmt);
+
+            return new User(id, username.trim(), password, "customer");
+
+        } catch (RuntimeException e) {
+            System.err.println("Error in userCRUD.createCustomer: " + e.getMessage());
+            throw e;
+        }
     }
 }

@@ -7,6 +7,7 @@ import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
 import src.components.agent.AgentUserListPanel;
+import src.components.agent.AgentUserReservationsPanel;
 import src.components.agent.FlightReservationsEditorPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
@@ -68,7 +69,7 @@ public class AgentPanel extends DynamicPanel {
 
         headerPanel.add(userBox, BorderLayout.WEST);
 
-        // Right side: work list + "view all active users" button in the header
+        // Right side: work list + agent tools (user list, reservation search)
         JPanel right = new JPanel(new BorderLayout());
         right.setOpaque(false);
 
@@ -78,8 +79,19 @@ public class AgentPanel extends DynamicPanel {
             pageController.show(userListPanel);
         });
 
+        JButton searchReservationsButton = new JButton("Search reservations by user ID");
+        searchReservationsButton.addActionListener(e -> {
+            AgentUserReservationsPanel panel = new AgentUserReservationsPanel();
+            pageController.show(panel);
+        });
+
+        JPanel buttons = new JPanel();
+        buttons.setOpaque(false);
+        buttons.add(viewUsersButton);
+        buttons.add(searchReservationsButton);
+
         right.add(workList, BorderLayout.CENTER);
-        right.add(viewUsersButton, BorderLayout.SOUTH);
+        right.add(buttons, BorderLayout.SOUTH);
 
         headerPanel.add(right, BorderLayout.EAST);
 
