@@ -29,7 +29,6 @@ public class FlightCrud {
             //CREATE SQL QUERY (now fixed with correct matching our SCHEMA so this way we are reaching our DATABASe), and connected to Airline
             // I was missing airplane table, which now created and joined in our search - my bad
             StringBuilder sql = new StringBuilder(
-                StringBuilder sql = new StringBuilder(
                     "SELECT " +
                     "  flight.flight_id      AS id, " +
                     "  flight.origin         AS origin, " +

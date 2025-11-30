@@ -30,16 +30,7 @@ public class RepositoryBridge {
         return null;
     }
 
-    public void saveReservation(FlightCustomerReservation reservation) {
-        //saving the reservation
-        //todo implement
-    }
 
-    public List<FlightCustomerReservation> findReservationsByUserId(String userId) {
-        //getting all reservations for a user
-        //todo implement
-        return List.of();
-    }
 
     //todo add more repo methods as needed
 
@@ -48,34 +39,34 @@ public class RepositoryBridge {
 
     //AIRLINES, this function is intened be used by SYS ADMIN
     public void saveAirline(Airline airline) {       
-        AirlineCrud.saveAirline(airline);
+        AirlineCRUD.saveAirline(airline);
     }
 
     // AGAIN SYS ADMIN
     public void deleteAirline(String airlineId) {      
-        AirlineCrud.deleteAirline(airlineId);
+        AirlineCRUD.deleteAirline(airlineId);
     }
 
     //ALL 3 USERS SHOULD USES THIS
     public List<Airline> findAllAirlines() {           
-        return AirlineCrud.findAll();
+        return AirlineCRUD.findAll();
     }
 
     //AIRPLANES
 
     //This is again intened by SYS ADMIN
     public void addAirplane(Airplane airplane, String airlineId) {
-        AirplaneCrud.addAirplane(airplane, airlineId);
+        AirplaneCRUD.addAirplane(airplane, airlineId);
     }
 
     //again SYTEM ADMIN
     public void deleteAirplane(String airplaneId) {    
-        AirplaneCrud.deleteAirplane(airplaneId);
+        AirplaneCRUD.deleteAirplane(airplaneId);
     }
 
     //ALL 3 users will be able to see airplane, actually maybe custome prolly wont use this, but we will get to that in controller
     public List<Airplane> findAllAirplanes() {        
-        return AirplaneCrud.findAll();
+        return AirplaneCRUD.findAll();
     }
 
     // ADD FLIGHTS, and DELETE, intended to be used and controlled by FLIGHT AGENT in their controller
@@ -87,12 +78,13 @@ public class RepositoryBridge {
         FlightCrud.deleteFlight(flightId);
     }
 
+    //Added as we now have done our reservationCRUD completed and can bridge em, this was next step now on to payment
     public void saveReservation(FlightCustomerReservation reservation) {
-    ReservationCrud.saveReservation(reservation);
-}
+        ReservationCRUD.saveReservation(reservation);
+    }
 
-public List<FlightCustomerReservation> findReservationsByUserId(String userId) {
-    return ReservationCrud.findByUserId(userId);
-}
+    public List<FlightCustomerReservation> findReservationsByUserId(String userId) {
+        return ReservationCRUD.findByUserId(userId);
+    }
 }
 
