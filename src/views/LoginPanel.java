@@ -2,18 +2,27 @@ package src.views;
 
 import java.awt.*;
 import javax.swing.*;
-import src.AppActions;
 import src.config.Theme;
+import src.controllers.AppController;
+import src.controllers.UserController;
+import src.factory.ControllerFactory;
+import src.schemas.loginResult;
 
-public class LoginPanel extends MainPanel {
+public class LoginPanel extends DynamicPanel {
 
     private JLabel title, userLabel, passLabel, errorLabel;
     private JTextField userField;
     private JPasswordField passField;
     private JButton loginButton;
+    private JButton createAccountButton;
     private JButton themeButton;
 
-    public LoginPanel(AppActions actions) {
+    private final AppController appController;
+    private final UserController userController;
+
+    public LoginPanel(AppController appController) {
+        this.appController = appController;
+        this.userController = ControllerFactory.getInstance().user();
 
         // build UI normally
         setLayout(new GridBagLayout());
@@ -31,23 +40,42 @@ public class LoginPanel extends MainPanel {
         loginButton = new JButton("Login");
         loginButton.setFocusPainted(false);
         loginButton.setContentAreaFilled(false);
-        loginButton.setOpaque(true);               
-        loginButton.setBorderPainted(false); 
+        loginButton.setOpaque(true);
+        loginButton.setBorderPainted(false);
 
         loginButton.addActionListener(e -> {
             var u = userField.getText();
             var p = new String(passField.getPassword());
-            actions.onLoginAttempt(u, p);
+
+            loginResult result = userController.attemptLogin(u, p);
+            if (result.success()) {
+                errorLabel.setText("");
+                appController.onLoginSuccess(result.user());
+            } else {
+                errorLabel.setText(result.message());
+            }
+        });
+
+        createAccountButton = new JButton("Create account");
+        createAccountButton.setFocusPainted(false);
+        createAccountButton.setContentAreaFilled(false);
+        createAccountButton.setOpaque(true);
+        createAccountButton.setBorderPainted(false);
+        createAccountButton.addActionListener(e -> {
+            var u = userField.getText();
+            var p = new String(passField.getPassword());
+
+            loginResult result = userController.registerCustomer(u, p);
+            errorLabel.setText(result.message());
         });
 
         themeButton = new JButton("Switch Theme");
         themeButton.setFocusPainted(false);
         themeButton.setContentAreaFilled(false);
-        themeButton.setOpaque(true);               
-        themeButton.setBorderPainted(false); 
+        themeButton.setOpaque(true);
+        themeButton.setBorderPainted(false);
 
-
-        themeButton.addActionListener(e -> actions.switchTheme());
+        themeButton.addActionListener(e -> appController.switchTheme());
 
         c.gridy = 0; c.gridwidth = 2; add(title, c);
         c.gridy = 1; c.gridwidth = 1; c.gridx = 0; add(userLabel, c);
@@ -56,8 +84,13 @@ public class LoginPanel extends MainPanel {
         c.gridx = 1; add(passField, c);
         c.gridx = 0; c.gridy = 3; c.gridwidth = 2; add(errorLabel, c);
 
-        c.gridy = 4; add(loginButton, c);
-        c.gridy = 5; add(themeButton, c);
+        c.gridy = 4; c.gridwidth = 1;
+        add(loginButton, c);
+        c.gridx = 1;
+        add(createAccountButton, c);
+
+        c.gridx = 0; c.gridy = 5; c.gridwidth = 2;
+        add(themeButton, c);
     }
 
     @Override
@@ -76,6 +109,8 @@ public class LoginPanel extends MainPanel {
 
         loginButton.setBackground(t.buttonBg);
         loginButton.setForeground(t.buttonFg);
+        createAccountButton.setBackground(t.buttonBg);
+        createAccountButton.setForeground(t.buttonFg);
 
         themeButton.setBackground(t.buttonBg);
         themeButton.setForeground(t.buttonFg);

@@ -4,8 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
-
+import java.util.List; 
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -21,7 +20,7 @@ public class FlightCrud {
      * Basic search by origin/destination and optional exact departure date.
      * Adjust the SQL/table/column names here to match your actual schema.
      */
-    public static List<Flight> searchFlights(String origin, String destination, String date) {
+    public static List<Flight> searchFlights(String origin, String destination, String date, String search_id) {
         List<Flight> flights = new ArrayList<>();
 
         try {
@@ -46,7 +45,7 @@ public class FlightCrud {
                     "JOIN airplane ON flight.airplane_id = airplane.airplane_id " +
                     "WHERE 1=1"
         );
-
+            System.out.println("inputs: " + origin + " " + destination + " " + date);
 
             List<String> params = new ArrayList<>();
 
@@ -61,15 +60,24 @@ public class FlightCrud {
                 params.add(destination.trim().toUpperCase());
             }
             if (date != null && !date.isBlank()) {
-                sql.append(" AND date = ?");
+                // Allow partial date matching using the masked pattern coming
+                // from the UI date field (e.g., "2025-__-__" for any day in
+                // 2025, "2025-12-__" for any day in December 2025). We rely
+                // on SQLite's LIKE semantics where '_' is a single-character
+                // wildcard.
+                sql.append(" AND date LIKE ?");
                 params.add(date.trim());
+            }
+            if (search_id != null && !search_id.isBlank()) {
+                sql.append(" AND flight_id = ?");
+                params.add(search_id.trim());
             }
 
             PreparedStatement stmt = DB.prepare(sql.toString());
             for (int i = 0; i < params.size(); i++) {
                 DB.set(stmt, i + 1, params.get(i));
             }
-
+            System.out.println("QUERY: " + sql.toString());
             // SUBMIT QUERY AND STORE RESULTS
             ResultSet rs = DB.query(stmt);
 
@@ -98,7 +106,7 @@ public class FlightCrud {
                     } catch (NumberFormatException ignored) {}
                 }
 
-                //ERROR HANDLING ON DATE
+                //ERROR HANDLING ON DATE -> ASSUMING WE CANT STORE A FLIGHT 
                 LocalDate departureDate = null;
                 if (dbDate != null && !dbDate.isBlank()) {
                     // expected format: yyyy-MM-dd (matches the UI mask)
@@ -153,6 +161,7 @@ public class FlightCrud {
      * 
      */
 
+    
     //intended to be used by FLIGHT AGENT
     public static void addFlight(Flight flight) {
     if (flight == null) {

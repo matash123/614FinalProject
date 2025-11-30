@@ -1,9 +1,9 @@
 package src.controllers;
 
 import java.util.List;
-
-import src.database.RepositoryBridge;
-import src.main.java.app.AppContext;
+import src.database.AirlineCrud;
+import src.database.AirplaneCrud;
+import src.events.ControllerBus;
 import src.models.Airline;
 import src.models.Airplane;
 
@@ -22,15 +22,9 @@ import src.models.Airplane;
  */
 
 public class AdminSystemAdministratorController {
-        private final RepositoryBridge repo;
-
-    public AdminSystemAdministratorController() {
-        this.repo = AppContext.getInstance().repository();
-    }
-
     //getting all the airlines
     public List<Airline> getAllAirlines() {
-        return repo.findAllAirlines();
+        return AirlineCrud.findAll();
     }
 
     // Method to create and update and airline
@@ -43,7 +37,12 @@ public class AdminSystemAdministratorController {
         }
 
         Airline airline = new Airline(airlineId.trim(), name.trim());
-        repo.saveAirline(airline);
+
+        AirlineCrud.saveAirline(airline);
+
+        //publishing airline catalog change
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
+
         return airline;
     }
 
@@ -52,13 +51,18 @@ public class AdminSystemAdministratorController {
         if (airlineId == null || airlineId.isBlank()) {
             throw new IllegalArgumentException("airlineId is required");
         }
-        repo.deleteAirline(airlineId.trim());
+
+        AirlineCrud.deleteAirline(airlineId.trim());
+
+        //publishing airline deletion
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
+
     }
 
    
     //loading all airplanes in database, would certainly be usesful to see
     public List<Airplane> getAllAirplanes() {
-        return repo.findAllAirplanes();
+        return AirplaneCrud.findAll();
     }
 
     /**
@@ -88,7 +92,12 @@ public class AdminSystemAdministratorController {
         );
 
         // tie airplane to specific airline it belongs to and we of course need airlineId as this how its portrayed in the DB
-        repo.addAirplane(airplane, airline.getAirlineId()); //using getter to get the airline
+
+        AirplaneCrud.addAirplane(airplane, airline.getAirlineId()); //using getter to get the airline
+
+        //publishing airplane catalog change
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
+
         return airplane;
     }
 
@@ -97,7 +106,14 @@ public class AdminSystemAdministratorController {
         if (airplaneId == null || airplaneId.isBlank()) {
             throw new IllegalArgumentException("airplaneId is required");
         }
-        repo.deleteAirplane(airplaneId.trim());
+
+        AirplaneCrud.deleteAirplane(airplaneId.trim());
+
+        //publishing airplane deletion
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
+
     }
+
+    //todo add authorization check to verify user is SystemAdministrator
 }
 

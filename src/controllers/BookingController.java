@@ -2,11 +2,18 @@ package src.controllers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import app.AppContext;
 import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
+import src.models.Flight;
+import src.models.Payment;
+import src.models.PaymentStatus;
+import src.models.Reservation;
+import src.models.ReservationStatus;
+import src.models.User;
 import src.payment.PaymentGateway;
 import src.database.RepositoryBridge;
 import src.database.ReservationCRUD;
@@ -30,20 +37,16 @@ import src.strategies.SeatSelectionStrategy;
 //handles booking logic
 public class BookingController {
     private PricingStrategy pricing;
-    private SearchSortStrategy sorter;
     private SeatSelectionStrategy seatStrategy;
-    private final RepositoryBridge repo;
     private final PaymentGateway paymentGateway;
 
     public BookingController() {
         this.pricing = new DefaultPricingStrategy();
         this.seatStrategy = new BestAvailableSeatStrategy();
-        this.repo = AppContext.getInstance().repository();
         this.paymentGateway = AppContext.getInstance().paymentGateway();
     }
 
     public void setPricing(PricingStrategy p) { this.pricing = p; }
-    public void setSorter(SearchSortStrategy s) { this.sorter = s; }
     public void setSeatStrategy(SeatSelectionStrategy s) { this.seatStrategy = s; }
 
     //implementing basic checks first

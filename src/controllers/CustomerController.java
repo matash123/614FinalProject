@@ -1,36 +1,36 @@
 package src.controllers;
 
 import java.util.List;
-
-import app.AppContext;
-import src.database.RepositoryBridge;
-import src.models.FlightCustomerReservation;
+import src.database.ReservationCRUD;
+import src.factory.ControllerFactory;
+import src.models.Reservation;
+import src.models.User;
 
 //handles customer specific operations
 public class CustomerController {
-    private final RepositoryBridge repo;
-
-    public CustomerController() {
-        this.repo = AppContext.getInstance().repository();
-    }
-
     public void updateProfile(String userId, String name, String email, String phone) {
         //updating the customer profile
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId required");
         }
-        //todo fetch customer update fields and save
-        //todo update profile validation
+        
+        //get user from user controller
+        UserController userController = ControllerFactory.getInstance().user();
+        User currentUser = userController.getCurrentUser();
+        if (currentUser == null || !currentUser.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("unauthorized: can only update own profile");
+        }
+        
+        //todo implement customer profile update via RepositoryBridge
     }
 
-    public List<FlightCustomerReservation> getReservations(String userId) {
+    public List<Reservation> getReservations(String userId) {
         //getting all reservations for this user
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId required");
         }
-        return repo.findReservationsByUserId(userId);
+        return ReservationCRUD.findByUserId(userId);
     }
 
-    //todo update profile validation and error handling
 }
 

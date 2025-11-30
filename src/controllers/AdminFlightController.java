@@ -2,9 +2,10 @@ package src.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import app.AppContext;
-import src.database.RepositoryBridge;
+import src.database.AirlineCrud;
+import src.database.AirplaneCrud;
+import src.database.FlightCrud;
+import src.events.ControllerBus;
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -12,21 +13,16 @@ import src.models.Flight;
 //handles admin flight management -> FLIGHT AGENT CONTROLLER ESSENTIALLY, SO WE SHOULD RENAME THIS CONTROLLER I BELEIVE
 
 public class AdminFlightController {
-    private final RepositoryBridge repo;
-
-    public AdminFlightController() {
-        this.repo = AppContext.getInstance().repository();
-    }
 
     //These are our airline Getters so we have access here under Flight Agent
     // Will be criticsl for booking, but whats key are these are READ ONLY
     //This is great as it follows encapsulation and extends functionality in meaningful and deliberate way
     public List<Airline> getAllAirlines() {
-        return repo.findAllAirlines();
+        return AirlineCrud.findAll();
     }
 
     public List<Airplane> getAllAirplanes() {
-        return repo.findAllAirplanes();
+        return AirplaneCrud.findAll();
     }
 
     public Flight createOrUpdateFlight(String flightId, Airline airline,Airplane airplane, String origin,String destination,LocalDate date, double price) {
@@ -59,10 +55,12 @@ public class AdminFlightController {
         Flight flight = new Flight(flightId,airline,origin,destination,date,airplane,price
         );
 
-        //saving to repo, which is great
-        repo.addFlight(flight);
+        //saving using FlightCrud
+        FlightCrud.addFlight(flight);
 
-        //TO DO: event bus handling and how we want to send messages, like we delete ariline, flight should be modified as well
+        //publishing flight created/updated event
+        //using FLIGHTS_LOADED to notify that flights have changed
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of(flight));
 
         return flight;
     }
@@ -73,12 +71,12 @@ public class AdminFlightController {
             throw new IllegalArgumentException("flightId required");
         }
 
-        repo.deleteFlight(flightId);
+        FlightCrud.deleteFlight(flightId);
         //todo find flight and mark as cancelled
         //todo handle cascade and notify affected reservations
         //GUI should handle messaging
     }
 
-    //todo cascade rules and reservation notifications
+    //todo add authorization check to verify user is FlightAgent or Admin
 }
 

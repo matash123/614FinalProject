@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 public class Payment {
 
     private final String paymentId;   // PK
-    private FlightCustomerReservation reservation;
+    private Reservation reservation;
     private double amount;
     private PaymentStatus status;
     private LocalDateTime timestamp;
 
     public Payment(String paymentId,
-                   FlightCustomerReservation reservation,
+                   Reservation reservation,
                    double amount,
                    PaymentStatus status,
                    LocalDateTime timestamp) {
@@ -31,7 +31,7 @@ public class Payment {
         return paymentId;
     }
 
-    public FlightCustomerReservation getReservation() {
+    public Reservation getReservation() {
         return reservation;
     }
 
