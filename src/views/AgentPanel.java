@@ -67,7 +67,19 @@ public class AgentPanel extends DynamicPanel {
         userBox = new UserBox();
         workList = new BookingList();
 
-        headerPanel.add(userBox, BorderLayout.WEST);
+        //left side: user box + flight search button
+        JPanel leftButtonsPanel = new JPanel();
+        leftButtonsPanel.setOpaque(false);
+        JButton flightSearchButton = new JButton("Flight Search");
+        flightSearchButton.addActionListener(e -> showFlightSearch());
+        leftButtonsPanel.add(flightSearchButton);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setOpaque(false);
+        leftPanel.add(userBox, BorderLayout.CENTER);
+        leftPanel.add(leftButtonsPanel, BorderLayout.SOUTH);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
 
         // Right side: work list + agent tools (user list, reservation search)
         JPanel right = new JPanel(new BorderLayout());

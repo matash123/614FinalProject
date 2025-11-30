@@ -77,6 +77,74 @@ public class AdminFlightController {
         //GUI should handle messaging
     }
 
+    //nice callable functions for admin/agent pages
+
+    //create a new flight
+    public Flight createFlight(String flightId, Airline airline, Airplane airplane, String origin, String destination, LocalDate date, double price) {
+        return createOrUpdateFlight(flightId, airline, airplane, origin, destination, date, price);
+    }
+
+    //update existing flight
+    public Flight updateFlight(String flightId, Airline airline, Airplane airplane, String origin, String destination, LocalDate date, double price) {
+        return createOrUpdateFlight(flightId, airline, airplane, origin, destination, date, price);
+    }
+
+    //delete a flight
+    public void deleteFlight(String flightId) {
+        cancelFlight(flightId);
+    }
+
+    //publish flight (make it available for booking)
+    public boolean publishFlight(String flightId) {
+        //for now just verify flight exists
+        Flight f = FlightCrud.findFlightById(flightId);
+        if (f == null) {
+            return false;
+        }
+        //todo add published flag to flight model/db if needed
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of(f));
+        return true;
+    }
+
+    //archive flight (hide from search but keep in db)
+    public boolean archiveFlight(String flightId) {
+        //todo implement archive logic if needed
+        Flight f = FlightCrud.findFlightById(flightId);
+        return f != null;
+    }
+
+    //add customer to flight (create reservation)
+    public boolean addCustomerToFlight(String customerId, String flightId, int seats) {
+        if (customerId == null || flightId == null || seats <= 0) {
+            throw new IllegalArgumentException("invalid parameters");
+        }
+        //todo implement - would need to call BookingController or ReservationCRUD
+        //for now return false as placeholder
+        return false;
+    }
+
+    //remove customer from flight (cancel reservation)
+    public boolean removeCustomerFromFlight(String reservationId) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+        //todo implement - would need ReservationCRUD.deleteById
+        return false;
+    }
+
+    //list flights with optional filters
+    public List<Flight> listFlights(String origin, String destination, String date) {
+        return FlightCrud.searchFlights(origin, destination, date, null);
+    }
+
+    //get flight details by id
+    public Flight getFlightDetails(String flightId) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId required");
+        }
+        return FlightCrud.findFlightById(flightId);
+    }
+
     //todo add authorization check to verify user is FlightAgent or Admin
 }
 

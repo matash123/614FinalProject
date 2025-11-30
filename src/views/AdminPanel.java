@@ -7,6 +7,7 @@ import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
 import src.components.admin.AdminFlightEditorPanel;
+import src.components.admin.PromotionalNewsEditor;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
 import src.models.Flight;
@@ -65,7 +66,28 @@ public class AdminPanel extends DynamicPanel {
         userBox = new UserBox();
         taskList = new BookingList();
 
-        headerPanel.add(userBox, BorderLayout.WEST);
+        //buttons panel for navigation
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setOpaque(false);
+        JButton flightSearchButton = new JButton("Flight Search");
+        JButton promotionsButton = new JButton("Promotions / News");
+
+        flightSearchButton.addActionListener(e -> showFlightSearch());
+        promotionsButton.addActionListener(e -> {
+            PromotionalNewsEditor editor = new PromotionalNewsEditor();
+            editor.setPageController(pageController);
+            setActiveView(editor);
+        });
+
+        buttonsPanel.add(flightSearchButton);
+        buttonsPanel.add(promotionsButton);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setOpaque(false);
+        leftPanel.add(userBox, BorderLayout.CENTER);
+        leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
         headerPanel.add(taskList, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
