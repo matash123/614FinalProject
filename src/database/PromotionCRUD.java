@@ -101,6 +101,7 @@ public class PromotionCRUD {
         if (promo == null) {
             throw new IllegalArgumentException("promotion cannot be null");
         }
+        System.out.println("Saving promotion: " + promo.getTitle());
 
         try {
             String sql =

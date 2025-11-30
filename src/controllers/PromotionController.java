@@ -1,6 +1,7 @@
 package src.controllers;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import src.database.PromotionCRUD;
@@ -13,6 +14,47 @@ public class PromotionController {
     //get all promotions
     public List<Promotion> getAllPromotions() {
         return PromotionCRUD.findAll();
+    }
+
+    /**
+     * Get all promotions that are currently active based on today's date.
+     * A promotion is considered active if:
+     * - startDate is null or today is on/after startDate, AND
+     * - endDate is null or today is on/before endDate.
+     */
+    public List<Promotion> getActivePromotions() {
+        LocalDate today = LocalDate.now();
+        List<Promotion> active = new ArrayList<>();
+
+        for (Promotion p : getAllPromotions()) {
+            if (p == null) continue;
+
+            LocalDate start = p.getStartDate();
+            LocalDate end = p.getEndDate();
+
+            if (start != null && today.isBefore(start)) {
+                continue;
+            }
+            if (end != null && today.isAfter(end)) {
+                continue;
+            }
+            active.add(p);
+        }
+
+        return active;
+    }
+
+    /**
+     * Convenience method to get the most recent active promotion.
+     * Relies on underlying {@link PromotionCRUD#findAll()} ordering
+     * promotions by start date descending.
+     */
+    public Promotion getMostRecentActivePromotion() {
+        List<Promotion> active = getActivePromotions();
+        if (active.isEmpty()) {
+            return null;
+        }
+        return active.get(0);
     }
 
     //get promotion by id

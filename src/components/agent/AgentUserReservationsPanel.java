@@ -7,10 +7,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.table.DefaultTableModel;
+import src.components.ReservationTablePanel;
 import src.config.Theme;
 import src.controllers.AgentController;
 import src.database.ReservationCRUD;
@@ -38,8 +36,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
     private final JLabel titleLabel;
     private final JTextField userIdField;
     private final JButton searchButton;
-    private final JTable reservationTable;
-    private final JScrollPane scrollPane;
+    private final ReservationTablePanel reservationTablePanel;
     private final JButton removeButton;
     private final JButton changeStatusButton;
 
@@ -75,8 +72,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         header.add(searchBar, BorderLayout.EAST);
 
         // Table area
-        reservationTable = new JTable();
-        scrollPane = new JScrollPane(reservationTable);
+        reservationTablePanel = new ReservationTablePanel();
 
         // Bottom actions
         removeButton = new JButton("Remove selected booking");
@@ -93,7 +89,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         bottomBar.add(buttons, BorderLayout.EAST);
 
         add(header, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(reservationTablePanel, BorderLayout.CENTER);
         add(bottomBar, BorderLayout.SOUTH);
 
         // If we were given an initial user ID (e.g., from the user list), seed the field and load
@@ -102,7 +98,8 @@ public class AgentUserReservationsPanel extends DynamicPanel {
             refreshData();
         } else {
             // Start with an empty model
-            setTableData(List.of());
+            currentReservations = List.of();
+            reservationTablePanel.setReservations(currentReservations);
         }
     }
 
@@ -119,12 +116,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         userIdField.setBackground(t.inputBg);
         userIdField.setForeground(t.inputFg);
 
-        scrollPane.setBackground(t.bg);
-        scrollPane.getViewport().setBackground(t.bg);
-
-        reservationTable.setBackground(t.bg);
-        reservationTable.setForeground(t.fg);
-        reservationTable.setGridColor(t.fg);
+        reservationTablePanel.refreshTheme(t);
 
         searchButton.setBackground(t.buttonBg);
         searchButton.setForeground(t.buttonFg);
@@ -141,13 +133,14 @@ public class AgentUserReservationsPanel extends DynamicPanel {
     public void refreshData() {
         String userId = userIdField.getText();
         if (userId == null || userId.trim().isEmpty()) {
-            setTableData(List.of());
+            currentReservations = List.of();
+            reservationTablePanel.setReservations(currentReservations);
             return;
         }
 
         try {
             currentReservations = ReservationCRUD.findByUserId(userId.trim());
-            setTableData(currentReservations);
+            reservationTablePanel.setReservations(currentReservations);
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(
                 this,
@@ -165,50 +158,8 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         }
     }
 
-    private void setTableData(List<Reservation> reservations) {
-        currentReservations = reservations;
-
-        String[] cols = {
-            "Reservation ID",
-            "User ID",
-            "Flight ID",
-            "Origin",
-            "Destination",
-            "Date",
-            "Seats",
-            "Status",
-            "Booked At"
-        };
-
-        String[][] data = new String[reservations.size()][cols.length];
-        for (int i = 0; i < reservations.size(); i++) {
-            Reservation r = reservations.get(i);
-            data[i][0] = r.getReservationId();
-            data[i][1] = r.getUser() != null ? r.getUser().getUserId() : "";
-            data[i][2] = r.getFlight() != null ? r.getFlight().getFlightId() : "";
-            data[i][3] = r.getFlight() != null ? r.getFlight().getOrigin() : "";
-            data[i][4] = r.getFlight() != null ? r.getFlight().getDestination() : "";
-            data[i][5] = r.getFlight() != null && r.getFlight().getDate() != null
-                ? r.getFlight().getDate().toString()
-                : "";
-            data[i][6] = Integer.toString(r.getSeats());
-            data[i][7] = r.getStatus() != null ? r.getStatus().name() : "";
-            data[i][8] = r.getBookingDateTime() != null
-                ? r.getBookingDateTime().toString()
-                : "";
-        }
-
-        DefaultTableModel model = new DefaultTableModel(data, cols) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        reservationTable.setModel(model);
-    }
-
     private void removeSelectedReservation() {
-        int row = reservationTable.getSelectedRow();
+        int row = reservationTablePanel.getSelectedRowIndex();
         if (row < 0 || currentReservations == null || row >= currentReservations.size()) {
             JOptionPane.showMessageDialog(
                 this,
@@ -245,7 +196,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
     }
 
     private void changeSelectedReservationStatus() {
-        int row = reservationTable.getSelectedRow();
+        int row = reservationTablePanel.getSelectedRowIndex();
         if (row < 0 || currentReservations == null || row >= currentReservations.size()) {
             JOptionPane.showMessageDialog(
                 this,

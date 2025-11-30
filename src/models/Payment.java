@@ -13,18 +13,21 @@ public class Payment {
     private double amount;
     private PaymentStatus status;
     private LocalDateTime timestamp;
+    private String creditCardNumber;
 
     public Payment(String paymentId,
                    Reservation reservation,
                    double amount,
                    PaymentStatus status,
-                   LocalDateTime timestamp) {
+                   LocalDateTime timestamp,
+                   String creditCardNumber) {
 
         this.paymentId = paymentId;
         this.reservation = reservation;
         this.amount = amount;
         this.status = status;
         this.timestamp = timestamp;
+        this.creditCardNumber = creditCardNumber;
     }
 
     public String getPaymentId() {
@@ -45,6 +48,10 @@ public class Payment {
 
     public LocalDateTime getTimestamp() {
         return timestamp;
+    }
+
+    public String getCreditCardNumber() {
+        return creditCardNumber;
     }
 
     // Extra functionality I believe will be relevant to Payment, based on an ENUM I may create but that is subject to change

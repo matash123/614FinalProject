@@ -20,6 +20,7 @@ public class PaymentCRUD {
         double amount        = rs.getDouble("amount");
         String statusStr     = DB.getString(rs, "status");
         String ts            = DB.getString(rs, "timestamp");
+        String creditCard    = DB.getString(rs, "credit_card");
 
 
         PaymentStatus status = PaymentStatus.valueOf(statusStr.toUpperCase());
@@ -28,8 +29,10 @@ public class PaymentCRUD {
         // Now to connect payment to reservation (the specific object), we are loading
         // the Reservation model from the DB for this reservation_id.
         Reservation reservation = ReservationCRUD.getReservationById(reservationId);
-
-        return new Payment(paymentId, reservation, amount, status, timestamp);
+        if (reservation == null) {
+            throw new IllegalArgumentException("Reservation not found: " + reservationId);
+        }
+        return new Payment(paymentId, reservation, amount, status, timestamp, creditCard);
     }
 
     // Method to get payment based on a specifc ID, may be important to check if someone hase apyed
@@ -76,8 +79,8 @@ public class PaymentCRUD {
     // 3) Insert a new payment row
     public static void insertPayment(Payment payment) {
         try {
-            String sql = "INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp) " +
-                         "VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp, credit_card) " +
+                         "VALUES (?, ?, ?, ?, ?, ?)";
 
             PreparedStatement stmt = DB.prepare(sql);
             stmt.setString(1, payment.getPaymentId());
@@ -87,6 +90,7 @@ public class PaymentCRUD {
 
             LocalDateTime ts = payment.getTimestamp();
             stmt.setString(5, ts != null ? ts.toString() : null);
+            stmt.setString(6, payment.getCreditCardNumber());
             System.out.println("payment stmt: " + stmt);
             DB.update(stmt);
 

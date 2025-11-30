@@ -12,7 +12,9 @@ import src.components.agent.AgentUserReservationsPanel;
 import src.components.agent.FlightReservationsEditorPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.factory.ControllerFactory;
 import src.models.Flight;
+import src.models.User;
 
 /**
  * Agent dashboard panel.
@@ -44,14 +46,6 @@ public class AgentPanel extends DynamicPanel {
 
         buildHeader();
         buildActiveArea();
-
-        // Temporary placeholder data until wired to real session/user info
-        userBox.setUser("Agent Smith", "agent@example.com", "AGENT");
-        workList.setBookings(List.of(
-            "Pending change request #1234",
-            "Seat upgrade inquiry #9821",
-            "Group booking quote #4410"
-        ));
 
         // Default content: show the reusable agent flight search view
         showFlightSearch();
@@ -221,6 +215,20 @@ public class AgentPanel extends DynamicPanel {
         }
 
         repaint();
+    }
+
+    @Override
+    public void refreshData() {
+        // Update header user box based on the currently logged-in user.
+        User currentUser = ControllerFactory.getInstance()
+                .user()
+                .getCurrentUser();
+        if (currentUser != null) {
+            String name = currentUser.getName() != null ? currentUser.getName() : currentUser.getUserId();
+            String email = currentUser.getEmail() != null ? currentUser.getEmail() : "";
+            String role = currentUser.getRole() != null ? currentUser.getRole() : "";
+            userBox.setUser(name, email, role);
+        }
     }
 }
 

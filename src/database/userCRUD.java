@@ -135,6 +135,7 @@ public class userCRUD {
 
     //update user name
     public static boolean updateName(String userId, String newName) {
+        System.out.println("updateName: " + userId + " " + newName);
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId is required");
         }

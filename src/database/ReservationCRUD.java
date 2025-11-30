@@ -373,4 +373,29 @@ public class ReservationCRUD {
             throw e;
         }
     }
+
+    /**
+     * Update the number of seats on an existing reservation.
+     */
+    public static void updateSeats(String reservationId, int seats) {
+        if (reservationId == null || reservationId.isBlank()) {
+            throw new IllegalArgumentException("reservationId required");
+        }
+        if (seats <= 0) {
+            throw new IllegalArgumentException("seats must be positive");
+        }
+
+        try {
+            String sql = "UPDATE reservation SET seats = ? WHERE reservation_id = ?";
+
+            PreparedStatement stmt = DB.prepare(sql);
+            DB.set(stmt, 1, Integer.toString(seats));
+            DB.set(stmt, 2, reservationId.trim());
+
+            DB.update(stmt);
+        } catch (RuntimeException e) {
+            System.err.println("Error updating seats for reservation " + reservationId + ": " + e.getMessage());
+            throw e;
+        }
+    }
 }
