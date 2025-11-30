@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-import src.actions.AdminActions;
 import src.config.Theme;
 
 /**
@@ -15,12 +14,9 @@ import src.config.Theme;
  */
 public class AdminFlightEditorPanel extends MainPanel {
 
-    private final AdminActions actions;
     private final JLabel placeholder;
 
-    public AdminFlightEditorPanel(AdminActions actions) {
-        this.actions = actions;
-
+    public AdminFlightEditorPanel() {
         setLayout(new BorderLayout());
 
         placeholder = new JLabel(

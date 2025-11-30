@@ -2,8 +2,11 @@ package src.views;
 
 import java.awt.*;
 import javax.swing.*;
-import src.actions.LoginActions;
 import src.config.Theme;
+import src.controllers.AppController;
+import src.controllers.UserController;
+import src.factory.ControllerFactory;
+import src.schemas.loginResult;
 
 
 public class LoginPanel extends MainPanel {
@@ -14,7 +17,12 @@ public class LoginPanel extends MainPanel {
     private JButton loginButton;
     private JButton themeButton;
 
-    public LoginPanel(LoginActions actions) {
+    private final AppController appController;
+    private final UserController userController;
+
+    public LoginPanel(AppController appController) {
+        this.appController = appController;
+        this.userController = ControllerFactory.getInstance().user();
 
         // build UI normally
         setLayout(new GridBagLayout());
@@ -32,23 +40,29 @@ public class LoginPanel extends MainPanel {
         loginButton = new JButton("Login");
         loginButton.setFocusPainted(false);
         loginButton.setContentAreaFilled(false);
-        loginButton.setOpaque(true);               
-        loginButton.setBorderPainted(false); 
+        loginButton.setOpaque(true);
+        loginButton.setBorderPainted(false);
 
         loginButton.addActionListener(e -> {
             var u = userField.getText();
             var p = new String(passField.getPassword());
-            actions.onLoginAttempt(u, p);
+
+            loginResult result = userController.attemptLogin(u, p);
+            if (result.success()) {
+                errorLabel.setText("");
+                appController.onLoginSuccess(result.user());
+            } else {
+                errorLabel.setText(result.message());
+            }
         });
 
         themeButton = new JButton("Switch Theme");
         themeButton.setFocusPainted(false);
         themeButton.setContentAreaFilled(false);
-        themeButton.setOpaque(true);               
-        themeButton.setBorderPainted(false); 
+        themeButton.setOpaque(true);
+        themeButton.setBorderPainted(false);
 
-
-        themeButton.addActionListener(e -> actions.switchTheme());
+        themeButton.addActionListener(e -> appController.switchTheme());
 
         c.gridy = 0; c.gridwidth = 2; add(title, c);
         c.gridy = 1; c.gridwidth = 1; c.gridx = 0; add(userLabel, c);

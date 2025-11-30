@@ -1,20 +1,17 @@
 package src;
 
-import src.actions.AdminActions;
-import src.actions.AgentActions;
-import src.actions.CustomerActions;
-import src.actions.LoginActions;
 import src.config.Theme;
+import src.controllers.AppController;
 import src.views.MainPanel;
 
 public interface AppFrame {
 
     void setView(MainPanel p);
 
-    MainPanel makeLoginPanel(LoginActions a);
-    MainPanel makeCustomerPanel(CustomerActions a);
-    MainPanel makeAgentPanel(AgentActions a);
-    MainPanel makeAdminPanel(AdminActions a);
+    MainPanel makeLoginPanel(AppController appController);
+    MainPanel makeCustomerPanel();
+    MainPanel makeAgentPanel();
+    MainPanel makeAdminPanel();
 
     void applyThemeToUI(Theme t);
 

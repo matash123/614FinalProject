@@ -5,10 +5,10 @@ import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import src.models.Customer;
 import src.models.Flight;
-import src.models.FlightCustomerReservation;
+import src.models.Reservation;
 import src.models.ReservationStatus;
+import src.models.User;
 
 public class ReservationCRUD {
 
@@ -16,12 +16,12 @@ public class ReservationCRUD {
      * Insert a new reservation row.
      * We only store the link to customer + flight (via IDs).
      */
-    public static void saveReservation(FlightCustomerReservation r) {
+    public static void saveReservation(Reservation r) {
         if (r == null) {
             throw new IllegalArgumentException("reservation cannot be null");
         }
-        if (r.getCustomer() == null || r.getFlight() == null) {
-            throw new IllegalArgumentException("customer and flight are required on reservation");
+        if (r.getUser() == null || r.getFlight() == null) {
+            throw new IllegalArgumentException("user and flight are required on reservation");
         }
 
         try {
@@ -32,7 +32,7 @@ public class ReservationCRUD {
 
             PreparedStatement stmt = DB.prepare(sql);
             DB.set(stmt, 1, r.getReservationId());
-            DB.set(stmt, 2, r.getCustomer().getUserId());
+            DB.set(stmt, 2, r.getUser().getUserId());
             DB.set(stmt, 3, r.getFlight().getFlightId());
             // seats is an int on the model, but our DB helper stores strings
             DB.set(stmt, 4, Integer.toString(r.getSeats()));
@@ -59,12 +59,12 @@ public class ReservationCRUD {
      * Instead by intentional design flight_id and let FlightCrud.findFlightByID (ID) construct the Flight object that up to date with the database
      * gonna be key for tracking people on the flight and if there is capacity
      */
-    public static List<FlightCustomerReservation> findByUserId(String userId) {
+    public static List<Reservation> findByUserId(String userId) {
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId required");
         }
 
-        List<FlightCustomerReservation> results = new ArrayList<>();
+        List<Reservation> results = new ArrayList<>();
 
         try {
             String sql =
@@ -118,18 +118,20 @@ public class ReservationCRUD {
                     continue;
                 }
 
-                // Now we need to build the customer object from the database
-                Customer customer = new Customer(
+                // Build a lightweight User object; customer-specific details
+                // can be resolved later if/when needed.
+                User user = new User(
                         customerId,
                         "Customer " + customerId,
-                        "" // password unknown at this point
+                        "",          // password unknown at this point
+                        "customer"   // role; stored as text in the user table
                 );
 
-                //and finally we can create our flight reservation object
-                FlightCustomerReservation reservation =
-                        new FlightCustomerReservation(
+                // and finally we can create our flight reservation object
+                Reservation reservation =
+                        new Reservation(
                                 reservationId,
-                                customer,
+                                user,
                                 flight,
                                 status,
                                 seats,

@@ -1,9 +1,14 @@
 package src.controllers;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import src.events.ControllerBus;
+import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
 import src.models.Flight;
+import src.models.Reservation;
+import src.models.ReservationStatus;
 import src.models.User;
 import src.payment.PaymentGateway;
 import src.strategies.BestAvailableSeatStrategy;
@@ -60,18 +65,24 @@ public class BookingController {
     }
 
     public boolean confirmBooking(String cardToken, Flight f, User u, int seats) {
-        //calculating price with optional promo
+        // basic parameter validation
         if (f == null || u == null || cardToken == null || seats <= 0) {
             throw new IllegalArgumentException("invalid booking parameters");
         }
 
-        //todo check for active promo and apply decorator if needed
+        // ensure only customers can book
+        String role = u.getRole();
+        if (role == null || !role.equalsIgnoreCase("customer")) {
+            throw new IllegalArgumentException("only customers can book flights");
+        }
+
+        // calculating price with optional promo
         PricingStrategy pricingToUse = pricing;
-        //for now using default todo check for promo and wrap
+        // todo check for active promo and apply decorator if needed
         BigDecimal amount = new PromoPricingDecorator(pricingToUse, BigDecimal.ZERO)
                 .priceFor(f, seats);
 
-        //authorizing the payment
+        // authorizing the payment
         boolean authOk = paymentGateway.authorize(cardToken, amount);
         if (!authOk) {
             throw new ControllerExceptions.ControllerException(
@@ -80,7 +91,7 @@ public class BookingController {
             );
         }
 
-        //capturing the payment
+        // capturing the payment
         String authId = "auth_" + System.currentTimeMillis();
         boolean captureOk = paymentGateway.capture(authId, amount);
         if (!captureOk) {
@@ -90,13 +101,27 @@ public class BookingController {
             );
         }
 
-        //saving the reservation
-        //todo create FlightCustomerReservation and save via repo
-        //todo publish ReservationCreated event
+        // reserving seats on flight before creating reservation
+        f.reserveSeats(seats);
+
+        // creating reservation entity with confirmed status
+        String reservationId = "RES_" + System.currentTimeMillis();
+        Reservation reservation = new Reservation(
+            reservationId,
+            u,
+            f,
+            ReservationStatus.CONFIRMED,
+            seats,
+            LocalDateTime.now()
+        );
+
+        // publishing reservation created event
+        ControllerBus.getInstance().publish(EventType.RESERVATION_CREATED, reservation);
 
         return true;
     }
 
-    //todo partial seat failures concurrency retry and rollback
+    //todo add transaction management for payment + reservation save
+    //todo handle concurrency for seat selection
 }
 

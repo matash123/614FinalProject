@@ -3,7 +3,6 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.actions.AdminActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
@@ -19,8 +18,6 @@ import src.config.Theme;
  */
 public class AdminPanel extends MainPanel {
 
-    private final AdminActions actions;
-
     // Core UI elements
     private JPanel headerPanel;
     private UserBox userBox;
@@ -29,9 +26,7 @@ public class AdminPanel extends MainPanel {
     private JPanel activeArea;
     private FlightSearchPanel flightSearchPanel;
 
-    public AdminPanel(AdminActions actions) {
-        this.actions = actions;
-
+    public AdminPanel() {
         setLayout(new BorderLayout());
         buildHeader();
         buildActiveArea();
@@ -88,17 +83,13 @@ public class AdminPanel extends MainPanel {
      */
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
-            // Pass the shared AppActions implementation directly so the
-            // search panel can talk to AppController without another
-            // indirection layer in this view.
-            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.ADMIN, actions);
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.ADMIN);
 
             // Extra control that only admins see – jump to flight editor
             JButton editFlightButton = new JButton("Edit selected flight");
             editFlightButton.addActionListener(e -> {
-                if (actions != null) {
-                    actions.showAdminFlightEditor();
-                }
+                // Show the admin flight editor inside this panel's active area.
+                setActiveView(new AdminFlightEditorPanel());
             });
             flightSearchPanel.addExtraSearchControl(editFlightButton);
         }

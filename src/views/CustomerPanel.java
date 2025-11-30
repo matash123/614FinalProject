@@ -3,12 +3,13 @@ package src.views;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import src.actions.CustomerActions;
 import src.components.BookingList;
 import src.components.ThemeAware;
 import src.components.UserBox;
+import src.components.customer.CustomerBookingPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.models.Flight;
 
 
 /**
@@ -17,8 +18,6 @@ import src.config.Theme;
  * - Center dynamic area
  */
 public class CustomerPanel extends MainPanel {
-
-    private final CustomerActions actions;
 
     // Core UI elements
     private FlightSearchPanel flightSearchPanel;
@@ -29,9 +28,7 @@ public class CustomerPanel extends MainPanel {
 
     private JPanel activeArea;
 
-    public CustomerPanel(CustomerActions actions) {
-        this.actions = actions;
-
+    public CustomerPanel() {
         setLayout(new BorderLayout());
         buildHeader();
         buildActiveArea();
@@ -89,15 +86,33 @@ public class CustomerPanel extends MainPanel {
      */
     private FlightSearchPanel getOrCreateFlightSearchPanel() {
         if (flightSearchPanel == null) {
-            // Pass the shared AppActions implementation directly so the
-            // search panel can talk to AppController without another
-            // indirection layer in this view.
-            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER, actions);
+            flightSearchPanel = new FlightSearchPanel(FlightSearchPanel.Mode.CUSTOMER);
+
+            // Extra control for customers – jump to booking for selected flight
+            JButton bookButton = new JButton("Book selected flight");
+            bookButton.addActionListener(e -> {
+                Flight selected = flightSearchPanel.getSelectedFlight();
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a flight to book.",
+                        "No flight selected",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+                }
+                // Switch the active area to the booking panel, passing the Flight model.
+                setActiveView(new CustomerBookingPanel(
+                    selected,
+                    this::showFlightSearch
+                ));
+            });
+            flightSearchPanel.addExtraSearchControl(bookButton);
         }
         return flightSearchPanel;
     }
 
-    /** Convenience method for controllers to make the search view active. */
+    /** Convenience method to make the search view active. */
     public void showFlightSearch() {
         setActiveView(getOrCreateFlightSearchPanel());
     }

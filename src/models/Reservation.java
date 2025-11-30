@@ -3,28 +3,34 @@ package src.models;
 import java.time.LocalDateTime;
 
 /**
- * Represents a booking of a flight by a customer.
+ * Represents a booking of a flight by a user with the CUSTOMER role.
  * Maps to the reservation table.
+ *
+ * Note: we intentionally depend on {@link User} here rather than the
+ * {@link Customer} subtype so that booking logic only needs to know
+ * about the authenticated user and their role. Customer-specific data
+ * can be fetched separately when needed.
  */
-public class FlightCustomerReservation {
+public class Reservation {
 
-    private final String reservationId;   // this what stores the reservation and connects customer & reservation & demolishes a many to many class linkage
-    private Customer customer; // holding the customer so we can again access the customerID as a secondary key
-    private Flight flight; // we want the flightID as our secondary key
+    // connects user & flight and captures reservation-specific data
+    private final String reservationId;
+    private User user;
+    private Flight flight;
     private ReservationStatus status;   // life-cycle status of the reservation
     private boolean payedStatus;
     private int seats;
     private LocalDateTime bookingDateTime;
 
-    public FlightCustomerReservation(String reservationId,
-                                     Customer customer,
-                                     Flight flight,
-                                     ReservationStatus status,
-                                     int seats,
-                                     LocalDateTime bookingDateTime) {
+    public Reservation(String reservationId,
+                       User user,
+                       Flight flight,
+                       ReservationStatus status,
+                       int seats,
+                       LocalDateTime bookingDateTime) {
 
         this.reservationId = reservationId;
-        this.customer = customer;
+        this.user = user;
         this.flight = flight;
         this.status = status;
         this.seats = seats;
@@ -35,8 +41,8 @@ public class FlightCustomerReservation {
         return reservationId;
     }
 
-    public Customer getCustomer() {
-        return customer;
+    public User getUser() {
+        return user;
     }
 
     public Flight getFlight() {
@@ -55,7 +61,7 @@ public class FlightCustomerReservation {
         return bookingDateTime;
     }
 
-    //Specic Methods to this fiedl
+    // Specific methods to this field
 
     public void confirm() {
         if (payedStatus == false) {
@@ -78,3 +84,5 @@ public class FlightCustomerReservation {
                 || status == ReservationStatus.CONFIRMED;
     }
 }
+
+
