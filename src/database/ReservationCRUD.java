@@ -40,6 +40,7 @@ public class ReservationCRUD {
 
             LocalDateTime ts = r.getBookingDateTime();
             DB.set(stmt, 6, ts != null ? ts.toString() : null);
+            
 
             DB.update(stmt);
 
@@ -146,4 +147,93 @@ public class ReservationCRUD {
 
         return results;
     }
+
+    //See over dev we realized that we needed a getReservationbyID, so it can get a single object so of the
+    //customer reservation object so it can be accessed by PAYMENT, I tried using our list but that didnt make sense either
+    // why would we build all reservation objects only to pull one
+
+    //I am going to reuse most of my code in the above function
+    //Shoutout to CHATGPT for the help identifying the need for this during our debugging
+    //again its very derivative of what we did the ocnstruction of all the previous CRUD, however
+    //CHATGPT deserves a ton of credit for it's implementation.
+
+    public static FlightCustomerReservation getReservationById(String reservationId) {
+    if (reservationId == null || reservationId.isBlank()) {
+        throw new IllegalArgumentException("reservationId required");
+    }
+
+    try {
+        String sql =
+            "SELECT reservation_id, customer_id, flight_id, seats, status, booking_time " +
+            "FROM reservation WHERE reservation_id = ?";
+
+        PreparedStatement stmt = DB.prepare(sql);
+        DB.set(stmt, 1, reservationId.trim());
+
+        ResultSet rs = DB.query(stmt);
+
+        if (!DB.next(rs)) {
+            return null; // no such reservation
+        }
+
+        String resId      = DB.getString(rs, "reservation_id");
+        String customerId = DB.getString(rs, "customer_id");
+        String flightId   = DB.getString(rs, "flight_id");
+        String seatsStr   = DB.getString(rs, "seats");
+        String statusStr  = DB.getString(rs, "status");
+        String bookingStr = DB.getString(rs, "booking_time");
+
+        int seats = 0;
+        if (seatsStr != null && !seatsStr.isBlank()) {
+            try {
+                seats = Integer.parseInt(seatsStr);
+            } catch (NumberFormatException ignored) {}
+        }
+
+        LocalDateTime bookingDateTime = null;
+        if (bookingStr != null && !bookingStr.isBlank()) {
+            try {
+                bookingDateTime = LocalDateTime.parse(bookingStr);
+            } catch (Exception ignored) {}
+        }
+
+        ReservationStatus status;
+        try {
+            status = ReservationStatus.valueOf(statusStr.toUpperCase());
+        } catch (Exception ex) {
+            if ("booked".equalsIgnoreCase(statusStr)) {
+                status = ReservationStatus.CONFIRMED;
+            } else {
+                status = ReservationStatus.CREATED;
+            }
+        }
+
+        // Rebuild Flight from DB (truth is in DB)
+        Flight flight = FlightCrud.findFlightById(flightId);
+        if (flight == null) {
+            return null;
+        }
+
+        // Minimal Customer object (you can refine later)
+        Customer customer = new Customer(
+                customerId,
+                "Customer " + customerId,
+                "" // password unknown here
+        );
+
+        return new FlightCustomerReservation(
+                resId,
+                customer,
+                flight,
+                status,
+                seats,
+                bookingDateTime
+        );
+
+    } catch (RuntimeException e) {
+        System.err.println("Error loading reservation " + reservationId + ": " + e.getMessage());
+        throw e;
+    }
+}
+
 }

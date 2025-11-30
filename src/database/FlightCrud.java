@@ -117,18 +117,6 @@ public class FlightCrud {
                 }
 
 
-                /** 
-                 * NOW WE HAVE AIRPLANE, dont believe we need this anymore
-                 * 
-                 * 
-                // TODO REPLACE AND GET ACTUAL AIRLINE, we cant create a flight without creating an airline model. So we must search and create and airline. 
-                // minimal Airline / Airplane construction so the Flight model is complete
-                String airlineId = (airlineName != null && airlineName.length() >= 3)
-                        ? airlineName.substring(0, 3).toUpperCase()
-                        : "GEN";
-
-                */
-
                  
 
 

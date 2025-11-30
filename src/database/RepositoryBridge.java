@@ -6,6 +6,8 @@ import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
 import src.models.FlightCustomerReservation;
+import src.models.Payment;
+import src.models.PaymentStatus;
 import src.models.User;
 
 //thin wrapper over the database layer
@@ -25,10 +27,8 @@ public class RepositoryBridge {
     }
 
     public Flight findFlightById(String flightId) {
-        //finding a single flight
-        //todo implement
-        return null;
-    }
+    return FlightCrud.findFlightById(flightId);
+}
 
 
 
@@ -86,5 +86,29 @@ public class RepositoryBridge {
     public List<FlightCustomerReservation> findReservationsByUserId(String userId) {
         return ReservationCRUD.findByUserId(userId);
     }
+    public FlightCustomerReservation findReservationById(String reservationId) {
+        return ReservationCRUD.getReservationById(reservationId);
+    }
+
+
+    //Now finally finished payments can add!
+
+    public void savePayment(Payment payment) {
+        PaymentCRUD.insertPayment(payment);
+    }
+
+    public Payment findPaymentById(String paymentId) {
+        return PaymentCRUD.getPaymentById(paymentId);
+    }
+
+    public List<Payment> findPaymentsForReservation(String reservationId) {
+        return PaymentCRUD.getPaymentsForReservation(reservationId);
+    }
+
+    public void updatePaymentStatus(String paymentId, PaymentStatus status) {
+        PaymentCRUD.updatePaymentStatus(paymentId, status);
+    }
 }
+
+
 
