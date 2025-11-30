@@ -1,19 +1,11 @@
 package src.controllers;
 
 import java.util.List;
-
-import app.AppContext;
-import src.database.RepositoryBridge;
+import src.database.ReservationCRUD;
 import src.models.FlightCustomerReservation;
 
 //handles customer specific operations
 public class CustomerController {
-    private final RepositoryBridge repo;
-
-    public CustomerController() {
-        this.repo = AppContext.getInstance().repository();
-    }
-
     public void updateProfile(String userId, String name, String email, String phone) {
         //updating the customer profile
         if (userId == null || userId.isBlank()) {
@@ -28,7 +20,7 @@ public class CustomerController {
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId required");
         }
-        return repo.findReservationsByUserId(userId);
+        return ReservationCRUD.findByUserId(userId);
     }
 
     //todo update profile validation and error handling

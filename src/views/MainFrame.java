@@ -2,8 +2,9 @@ package src.views;
 
 import java.awt.*;
 import javax.swing.*;
-import src.AppActions;
 import src.AppFrame;
+import src.actions.CustomerActions;
+import src.actions.LoginActions;
 import src.config.Theme;
 
 public class MainFrame extends JFrame implements AppFrame {
@@ -40,14 +41,14 @@ public class MainFrame extends JFrame implements AppFrame {
         }
     }
 
-    /* Panel factory methods stay unchanged */
+    /* Panel factory methods stay unchanged in behavior, but now use role-specific actions */
     @Override
-    public MainPanel makeLoginPanel(AppActions actions) {
+    public MainPanel makeLoginPanel(LoginActions actions) {
         return new LoginPanel(actions);
     }
 
     @Override
-    public MainPanel makeCustomerPanel(AppActions actions){
+    public MainPanel makeCustomerPanel(CustomerActions actions){
         return new CustomerPanel(actions);
     }
 }

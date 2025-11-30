@@ -59,7 +59,7 @@ CREATE TABLE airline (
 -- Flights
 CREATE TABLE flight (
     flight_id        TEXT PRIMARY KEY,     -- ↔ Flight.flightId
-    airplane_id      TEXT NOT NULL         -- Flight.airplane.airplaneID
+    airplane_id      TEXT NOT NULL,         -- Flight.airplane.airplaneID
     airline_id       TEXT NOT NULL,        -- ↔ Flight.airline.airlineId
     origin           TEXT NOT NULL,        -- ↔ Flight.origin  (or departure)
     destination      TEXT NOT NULL,        -- ↔ Flight.destination
@@ -145,7 +145,8 @@ INSERT INTO airplane (airplane_id, airline_id, model, manufacturer, capacity) VA
 INSERT INTO flight (flight_id, airline_id, airplane_id, origin, destination, date, total_seats, available_seats, price) VALUES
 ('FL100', 'WSJ', 'WSJ-737-1', 'Calgary',   'Vancouver', '2025-12-01', 160, 120, 199.99),
 ('FL200', 'ACN', 'ACN-320-1', 'Calgary',   'Toronto',   '2025-12-05', 180,  50, 249.50),
-('FL300', 'FLR', 'FLR-737-1', 'Edmonton',  'Vancouver', '2025-12-10', 140, 140, 149.99);
+('FL300', 'FLR', 'FLR-737-1', 'Edmonton',  'Vancouver', '2025-12-10', 140, 140, 149.99),
+('FL400', 'FLR', 'FLR-737-1', 'Edmonton',  'Vancouver', '2024-11-02', 140, 140, 149.99);
 
 -- Reservations
 INSERT INTO reservation (reservation_id, customer_id, flight_id, seats, status, booking_time) VALUES

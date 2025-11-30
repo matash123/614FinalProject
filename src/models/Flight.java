@@ -94,6 +94,12 @@ public class Flight {
         return airline;
     }
 
+    public Airplane getAirplane(){
+        return airplane;
+    }
+
+    
+
     public String getOrigin() {
         return origin;
     }
@@ -117,6 +123,8 @@ public class Flight {
     public double getPrice() {
         return price;
     }
+
+
 
     // setters only where you expect real changes (e.g., price update)
 }

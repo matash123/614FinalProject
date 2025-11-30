@@ -19,13 +19,11 @@ package src.database;
 //needed imports, we built FLIGHT CRUD first so this very much in the same tune and whole dev processed followed that structure
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
 import src.models.Airline;
 
-public class AirlineCRUD {
+public class AirlineCrud {
 
 
     //This is very much to be executed again by SYSTEM ADMINISTRATOR
@@ -110,4 +108,4 @@ public class AirlineCRUD {
         return new Airline(id, name);
     }
 }
-}
+

@@ -2,8 +2,9 @@ package src.views;
 
 import java.awt.*;
 import javax.swing.*;
-import src.AppActions;
+import src.actions.LoginActions;
 import src.config.Theme;
+
 
 public class LoginPanel extends MainPanel {
 
@@ -13,7 +14,7 @@ public class LoginPanel extends MainPanel {
     private JButton loginButton;
     private JButton themeButton;
 
-    public LoginPanel(AppActions actions) {
+    public LoginPanel(LoginActions actions) {
 
         // build UI normally
         setLayout(new GridBagLayout());

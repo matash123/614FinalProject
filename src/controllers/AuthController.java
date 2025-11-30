@@ -1,7 +1,6 @@
 package src.controllers;
 
-import app.AppContext;
-import src.database.RepositoryBridge;
+import src.database.userCRUD;
 import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
@@ -9,11 +8,9 @@ import src.models.User;
 
 //handles authentication logic
 public class AuthController {
-    private final RepositoryBridge repo;
     private User currentUser;
 
     public AuthController() {
-        this.repo = AppContext.getInstance().repository();
         this.currentUser = null;
     }
 
@@ -26,8 +23,8 @@ public class AuthController {
             throw new IllegalArgumentException("password cannot be blank");
         }
 
-        //asking the repo to find the user
-        User user = repo.findUserByEmail(email);
+        //asking the user CRUD to find the user
+        User user = userCRUD.getUser(email);
         if (user == null) {
             throw new ControllerExceptions.ControllerException(
                 ControllerExceptions.ErrorCode.INVALID_CREDENTIALS,
