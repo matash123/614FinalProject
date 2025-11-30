@@ -14,9 +14,7 @@ public class RepositoryBridge {
     //this is just a facade for now
 
     public User findUserByEmail(String email) {
-        //delegating to existing userCRUD or similar
-        //todo wire to src.database.userCRUD or create flight/user repos
-        return null;
+        return userCRUD.getUser(email);
     }
 
     public List<Flight> searchFlights(String origin, String destination, String date) {

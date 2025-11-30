@@ -23,17 +23,23 @@ public class FlightSearchController {
         this.sortStrategy = s;
     }
 
+    /**
+     * Searches for flights matching origin, destination, and optional date.
+     * Results are sorted using the configured SearchSortStrategy.
+     * Publishes FLIGHTS_LOADED event with results.
+     */
     public List<Flight> searchFlights(String origin, String destination, String date) {
-        //doing a basic search
+        //validate inputs
         if (origin == null || destination == null) {
             throw new IllegalArgumentException("origin and destination required");
         }
 
+        //query repository for flights
         List<Flight> results = repo.searchFlights(origin, destination, date);
-        //applying the sort strategy
+        //apply sort strategy
         results = sortStrategy.sort(results);
 
-        //telling everyone flights were loaded
+        //publish flights loaded event
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, results);
         return results;
     }

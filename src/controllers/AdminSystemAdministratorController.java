@@ -3,6 +3,7 @@ package src.controllers;
 import java.util.List;
 
 import src.database.RepositoryBridge;
+import src.events.ControllerBus;
 import src.main.java.app.AppContext;
 import src.models.Airline;
 import src.models.Airplane;
@@ -44,6 +45,8 @@ public class AdminSystemAdministratorController {
 
         Airline airline = new Airline(airlineId.trim(), name.trim());
         repo.saveAirline(airline);
+        //publishing airline catalog change
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
         return airline;
     }
 
@@ -53,6 +56,8 @@ public class AdminSystemAdministratorController {
             throw new IllegalArgumentException("airlineId is required");
         }
         repo.deleteAirline(airlineId.trim());
+        //publishing airline deletion
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
     }
 
    
@@ -89,6 +94,8 @@ public class AdminSystemAdministratorController {
 
         // tie airplane to specific airline it belongs to and we of course need airlineId as this how its portrayed in the DB
         repo.addAirplane(airplane, airline.getAirlineId()); //using getter to get the airline
+        //publishing airplane catalog change
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
         return airplane;
     }
 
@@ -98,6 +105,10 @@ public class AdminSystemAdministratorController {
             throw new IllegalArgumentException("airplaneId is required");
         }
         repo.deleteAirplane(airplaneId.trim());
+        //publishing airplane deletion
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
     }
+
+    //todo add authorization check to verify user is SystemAdministrator
 }
 

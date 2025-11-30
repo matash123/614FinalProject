@@ -1,18 +1,22 @@
 package src.controllers;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import app.AppContext;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import src.database.RepositoryBridge;
+import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
 import src.events.ControllerExceptions;
-import src.payment.PaymentGateway;
-import src.models.User;
+import src.models.Customer;
 import src.models.Flight;
+import src.models.FlightCustomerReservation;
+import src.models.ReservationStatus;
+import src.models.User;
+import src.payment.PaymentGateway;
 import src.strategies.BestAvailableSeatStrategy;
-import src.strategies.PricingStrategy;
 import src.strategies.DefaultPricingStrategy;
+import src.strategies.PricingStrategy;
 import src.strategies.PromoPricingDecorator;
 import src.strategies.SearchSortStrategy;
 import src.strategies.SeatSelectionStrategy;
@@ -71,9 +75,9 @@ public class BookingController {
             throw new IllegalArgumentException("invalid booking parameters");
         }
 
-        //todo check for active promo and apply decorator if needed
+        //calculating price with optional promo
         PricingStrategy pricingToUse = pricing;
-        //for now using default todo check for promo and wrap
+        //todo check for active promo and apply decorator if needed
         BigDecimal amount = new PromoPricingDecorator(pricingToUse, BigDecimal.ZERO)
                 .priceFor(f, seats);
 
@@ -97,12 +101,39 @@ public class BookingController {
         }
 
         //saving the reservation
-        //todo create FlightCustomerReservation and save via repo
-        //todo publish ReservationCreated event
+        //creating reservation entity
+        String reservationId = "RES_" + System.currentTimeMillis();
+        //converting User to Customer
+        Customer customer = null;
+        if (u instanceof Customer) {
+            customer = (Customer) u;
+        } else {
+            throw new IllegalArgumentException("user must be a Customer");
+        }
+        
+        //reserving seats on flight before creating reservation
+        f.reserveSeats(seats);
+        
+        //creating reservation with confirmed status
+        FlightCustomerReservation reservation = new FlightCustomerReservation(
+            reservationId,
+            customer,
+            f,
+            ReservationStatus.CONFIRMED,
+            seats,
+            LocalDateTime.now()
+        );
+        
+        //saving reservation via repo
+        repo.saveReservation(reservation);
+        
+        //publishing reservation created event
+        ControllerBus.getInstance().publish(EventType.RESERVATION_CREATED, reservation);
 
         return true;
     }
 
-    //todo partial seat failures concurrency retry and rollback
+    //todo add transaction management for payment + reservation save
+    //todo handle concurrency for seat selection
 }
 

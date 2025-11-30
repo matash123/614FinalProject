@@ -1,10 +1,10 @@
 package src.controllers;
 
+import app.AppContext;
 import java.time.LocalDate;
 import java.util.List;
-
-import app.AppContext;
 import src.database.RepositoryBridge;
+import src.events.ControllerBus;
 import src.models.Airline;
 import src.models.Airplane;
 import src.models.Flight;
@@ -62,7 +62,9 @@ public class AdminFlightController {
         //saving to repo, which is great
         repo.addFlight(flight);
 
-        //TO DO: event bus handling and how we want to send messages, like we delete ariline, flight should be modified as well
+        //publishing flight created/updated event
+        //using FLIGHTS_LOADED to notify that flights have changed
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of(flight));
 
         return flight;
     }
@@ -74,11 +76,11 @@ public class AdminFlightController {
         }
 
         repo.deleteFlight(flightId);
-        //todo find flight and mark as cancelled
-        //todo handle cascade and notify affected reservations
-        //GUI should handle messaging
+        //todo handle cascade cancellation of reservations
+        //publishing flight deletion notification
+        ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
     }
 
-    //todo cascade rules and reservation notifications
+    //todo add authorization check to verify user is FlightAgent or Admin
 }
 

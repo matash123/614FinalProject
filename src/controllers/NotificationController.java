@@ -26,12 +26,10 @@ public class NotificationController {
         }
 
         //figuring out which users are eligible
-        //todo query repo for eligible customers
+        //todo query RepositoryBridge for eligible customers and send promos
         //telling everyone promos were sent
         ControllerBus.getInstance().publish(EventType.PROMO_SENT, "monthly_promo");
         lastPromoSentTimestamp = now;
     }
-
-    //todo channel delivery like email or sms and user eligibility logic
 }
 
