@@ -57,7 +57,19 @@ public class CustomerPanel extends DynamicPanel {
         userBox = new UserBox();
         bookingList = new UserBookingList();
 
-        headerPanel.add(userBox, BorderLayout.WEST);
+        //flight search button
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setOpaque(false);
+        JButton flightSearchButton = new JButton("Flight Search");
+        flightSearchButton.addActionListener(e -> showFlightSearch());
+        buttonsPanel.add(flightSearchButton);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setOpaque(false);
+        leftPanel.add(userBox, BorderLayout.CENTER);
+        leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
         headerPanel.add(bookingList, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
