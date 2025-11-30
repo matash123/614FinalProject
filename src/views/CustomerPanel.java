@@ -2,6 +2,7 @@ package src.views;
 
 import java.awt.*;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.*;
 import src.components.AccountEditorPanel;
 import src.components.ThemeAware;
@@ -10,7 +11,10 @@ import src.components.UserBox;
 import src.components.customer.CustomerBookingPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
+import src.database.ReservationCRUD;
+import src.factory.ControllerFactory;
 import src.models.Flight;
+import src.models.Reservation;
 
 
 /**
@@ -196,6 +200,7 @@ public class CustomerPanel extends DynamicPanel {
     public void refreshData() {
         // Hard-code updates to header components that should react to
         // domain events (e.g., new bookings for the current user).
-        bookingList.refreshData();
+       List<Reservation> reservations = ReservationCRUD.findByUserId(ControllerFactory.getInstance().user().getCurrentUser().getUserId());
+       refreshBookings(reservations.stream().map(Reservation::getReservationId).collect(Collectors.toList()));
     }
 }

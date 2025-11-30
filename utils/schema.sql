@@ -119,7 +119,7 @@ CREATE TABLE airplane (
 
 -- Users
 INSERT INTO user (id, name, username, email, password, active, role) VALUES 
-('0','timmy',  'kingTimmy',   'timmy@example.com',  '1', 1, 'customer'),
+('0','1',  'kingTimmy',   'timmy@example.com',  '1', 1, 'customer'),
 ('1','jeff',   'kingJeff',    'jeff@example.com',   '1', 1, 'customer'),
 ('2','agent',  'agent',       'agent@example.com',  '1', 1, 'agent'),
 ('3','robot',  'kingRobot',   'robot@example.com',  '1', 1, 'agent'),

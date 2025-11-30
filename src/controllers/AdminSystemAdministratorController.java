@@ -1,8 +1,8 @@
 package src.controllers;
 
 import java.util.List;
-import src.database.AirlineCrud;
-import src.database.AirplaneCrud;
+import src.database.AirlineCRUD;
+import src.database.AirplaneCRUD;
 import src.events.ControllerBus;
 import src.models.Airline;
 import src.models.Airplane;
@@ -24,7 +24,7 @@ import src.models.Airplane;
 public class AdminSystemAdministratorController {
     //getting all the airlines
     public List<Airline> getAllAirlines() {
-        return AirlineCrud.findAll();
+        return AirlineCRUD.findAll();
     }
 
     // Method to create and update and airline
@@ -38,7 +38,7 @@ public class AdminSystemAdministratorController {
 
         Airline airline = new Airline(airlineId.trim(), name.trim());
 
-        AirlineCrud.saveAirline(airline);
+        AirlineCRUD.saveAirline(airline);
 
         //publishing airline catalog change
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
@@ -52,7 +52,7 @@ public class AdminSystemAdministratorController {
             throw new IllegalArgumentException("airlineId is required");
         }
 
-        AirlineCrud.deleteAirline(airlineId.trim());
+        AirlineCRUD.deleteAirline(airlineId.trim());
 
         //publishing airline deletion
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
@@ -62,7 +62,7 @@ public class AdminSystemAdministratorController {
    
     //loading all airplanes in database, would certainly be usesful to see
     public List<Airplane> getAllAirplanes() {
-        return AirplaneCrud.findAll();
+        return AirplaneCRUD.findAll();
     }
 
     /**
@@ -93,7 +93,7 @@ public class AdminSystemAdministratorController {
 
         // tie airplane to specific airline it belongs to and we of course need airlineId as this how its portrayed in the DB
 
-        AirplaneCrud.addAirplane(airplane, airline.getAirlineId()); //using getter to get the airline
+        AirplaneCRUD.addAirplane(airplane, airline.getAirlineId()); //using getter to get the airline
 
         //publishing airplane catalog change
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());
@@ -107,7 +107,7 @@ public class AdminSystemAdministratorController {
             throw new IllegalArgumentException("airplaneId is required");
         }
 
-        AirplaneCrud.deleteAirplane(airplaneId.trim());
+        AirplaneCRUD.deleteAirplane(airplaneId.trim());
 
         //publishing airplane deletion
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of());

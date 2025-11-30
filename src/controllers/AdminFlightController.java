@@ -2,8 +2,8 @@ package src.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
-import src.database.AirlineCrud;
-import src.database.AirplaneCrud;
+import src.database.AirlineCRUD;
+import src.database.AirplaneCRUD;
 import src.database.FlightCrud;
 import src.events.ControllerBus;
 import src.models.Airline;
@@ -18,11 +18,11 @@ public class AdminFlightController {
     // Will be criticsl for booking, but whats key are these are READ ONLY
     //This is great as it follows encapsulation and extends functionality in meaningful and deliberate way
     public List<Airline> getAllAirlines() {
-        return AirlineCrud.findAll();
+        return AirlineCRUD.findAll();
     }
 
     public List<Airplane> getAllAirplanes() {
-        return AirplaneCrud.findAll();
+        return AirplaneCRUD.findAll();
     }
 
     public Flight createOrUpdateFlight(String flightId, Airline airline,Airplane airplane, String origin,String destination,LocalDate date, double price) {

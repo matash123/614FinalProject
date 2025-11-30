@@ -1,13 +1,9 @@
 package src.controllers;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import app.AppContext;
-import src.events.ControllerBus.EventType;
-import src.events.ControllerExceptions;
+import src.database.PaymentCRUD;
+import src.database.ReservationCRUD;
+import src.models.Customer;
 import src.models.Flight;
 import src.models.Payment;
 import src.models.PaymentStatus;
@@ -15,23 +11,10 @@ import src.models.Reservation;
 import src.models.ReservationStatus;
 import src.models.User;
 import src.payment.PaymentGateway;
-import src.database.RepositoryBridge;
-import src.database.ReservationCRUD;
-import src.database.PaymentCRUD;
-import src.database.userCRUD;
-import src.events.ControllerExceptions;
-import src.models.Customer;
-import src.models.Flight;
-import src.models.FlightCustomerReservation;
-import src.models.Payment;
-import src.models.PaymentStatus;
-import src.models.ReservationStatus;
-import src.models.User;
-import src.payment.PaymentGateway;
+import src.payment.SimulatedPaymentGateway;
 import src.strategies.BestAvailableSeatStrategy;
 import src.strategies.DefaultPricingStrategy;
 import src.strategies.PricingStrategy;
-import src.strategies.SearchSortStrategy;
 import src.strategies.SeatSelectionStrategy;
 
 //handles booking logic
@@ -43,7 +26,8 @@ public class BookingController {
     public BookingController() {
         this.pricing = new DefaultPricingStrategy();
         this.seatStrategy = new BestAvailableSeatStrategy();
-        this.paymentGateway = AppContext.getInstance().paymentGateway();
+        // Use a concrete gateway directly; no AppContext indirection.
+        this.paymentGateway = new SimulatedPaymentGateway();
     }
 
     public void setPricing(PricingStrategy p) { this.pricing = p; }
@@ -107,22 +91,23 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
         );
     }
 
-    // Building a reservation object now directly from the database
+    // Building a reservation object
     String reservationId = "R" + System.currentTimeMillis();
 
-    FlightCustomerReservation reservation = new FlightCustomerReservation(
+    Reservation reservation = new Reservation(
             reservationId,
-            customer,
+            u,          // we store the authenticated user on the reservation
             f,
             ReservationStatus.CONFIRMED,    // treat as confirmed
             seats,
             LocalDateTime.now()
     );
 
-    // Now we can save reservation via RepositoryBridge
-    repo.saveReservation(reservation);
+    // Save reservation directly via CRUD
+    System.out.println("Saving reservation");
+    ReservationCRUD.saveReservation(reservation);
 
-    //Now we can create and save payment
+    // Now we can create and save payment
     String paymentId = "P" + System.currentTimeMillis();
 
     Payment payment = new Payment(
@@ -133,8 +118,8 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
             LocalDateTime.now()
     );
 
-    //now we can finally confirm payment with our SOURCE of TRUTH the repsoitory bridge
-    repo.savePayment(payment);
+    // Save payment directly via CRUD
+    PaymentCRUD.insertPayment(payment);
 
     
     return true;
