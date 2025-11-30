@@ -88,6 +88,9 @@ public class AgentPanel extends DynamicPanel {
         JButton viewUsersButton = new JButton("View all active users");
         viewUsersButton.addActionListener(e -> {
             AgentUserListPanel userListPanel = new AgentUserListPanel();
+            // Wire the shared PageController so the list panel can open
+            // a reservations view for the selected user.
+            userListPanel.setPageController(pageController);
             pageController.show(userListPanel);
         });
 

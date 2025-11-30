@@ -204,9 +204,15 @@ public class userCRUD {
         }
 
         try {
+            String activeStatus = "";
+            if (active) {
+                activeStatus = "1";
+            }else{
+                activeStatus = "0";
+            }
             String sql = "UPDATE user SET active = ? WHERE id = ?";
             PreparedStatement stmt = DB.prepare(sql);
-            DB.set(stmt, 1, active ? 1 : 0);
+            DB.set(stmt, 1, activeStatus);
             DB.set(stmt, 2, userId.trim());
             DB.update(stmt);
             return true;

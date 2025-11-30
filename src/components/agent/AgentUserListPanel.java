@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import src.config.Theme;
 import src.database.userCRUD;
@@ -23,6 +24,8 @@ import src.views.PageController;
 public class AgentUserListPanel extends DynamicPanel {
 
     private final JLabel titleLabel;
+    private final JTextField searchField;
+    private final JButton searchButton;
     private final JTable userTable;
     private final JScrollPane scrollPane;
     private final JButton viewReservationsButton;
@@ -33,8 +36,24 @@ public class AgentUserListPanel extends DynamicPanel {
     public AgentUserListPanel() {
         setLayout(new BorderLayout());
 
-        titleLabel = new JLabel("All Active Users", JLabel.CENTER);
+        titleLabel = new JLabel("All Active Users", JLabel.LEFT);
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+
+        // Header: title + search bar
+        JPanel header = new JPanel(new BorderLayout(8, 0));
+        header.add(titleLabel, BorderLayout.WEST);
+
+        JPanel searchBar = new JPanel(new BorderLayout(4, 0));
+        JLabel searchLabel = new JLabel("Search (ID or username):");
+        searchField = new JTextField(14);
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(e -> refreshData());
+
+        searchBar.add(searchLabel, BorderLayout.WEST);
+        searchBar.add(searchField, BorderLayout.CENTER);
+        searchBar.add(searchButton, BorderLayout.EAST);
+
+        header.add(searchBar, BorderLayout.EAST);
 
         userTable = new JTable();
         scrollPane = new JScrollPane(userTable);
@@ -45,7 +64,7 @@ public class AgentUserListPanel extends DynamicPanel {
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.add(viewReservationsButton, BorderLayout.EAST);
 
-        add(titleLabel, BorderLayout.NORTH);
+        add(header, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(bottomBar, BorderLayout.SOUTH);
 
@@ -62,6 +81,12 @@ public class AgentUserListPanel extends DynamicPanel {
         setBackground(t.bg);
         titleLabel.setForeground(t.fg);
 
+        // Search bar styling
+        searchField.setBackground(t.inputBg);
+        searchField.setForeground(t.inputFg);
+        searchButton.setBackground(t.buttonBg);
+        searchButton.setForeground(t.buttonFg);
+
         scrollPane.setBackground(t.bg);
         scrollPane.getViewport().setBackground(t.bg);
 
@@ -77,7 +102,24 @@ public class AgentUserListPanel extends DynamicPanel {
 
     @Override
     public void refreshData() {
-        currentUsers = userCRUD.findAllActive();
+        List<User> allUsers = userCRUD.findAllActive();
+
+        // Optional in-panel filtering by ID or username
+        String query = searchField != null ? searchField.getText() : null;
+        if (query != null && !query.trim().isEmpty()) {
+            String q = query.trim().toLowerCase();
+            java.util.ArrayList<User> filtered = new java.util.ArrayList<>();
+            for (User u : allUsers) {
+                String id = u.getUserId() != null ? u.getUserId().toLowerCase() : "";
+                String name = u.getName() != null ? u.getName().toLowerCase() : "";
+                if (id.contains(q) || name.contains(q)) {
+                    filtered.add(u);
+                }
+            }
+            currentUsers = filtered;
+        } else {
+            currentUsers = allUsers;
+        }
 
         String[] cols = { "ID", "Username", "Role" };
         String[][] data = new String[currentUsers.size()][cols.length];
