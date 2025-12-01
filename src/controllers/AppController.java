@@ -4,6 +4,7 @@ import src.AppFrame;
 import src.config.Theme;
 import src.factory.ControllerFactory;
 import src.models.User;
+import src.views.SignupPanel;
 
 /**
  * Top-level application controller that receives high-level UI/UX events
@@ -110,6 +111,23 @@ public class AppController {
             this.theme = Theme.LIGHT;
         }
         if (mf != null) {
+            mf.applyThemeToUI(this.theme);
+        }
+    }
+
+    /**
+     * Added functions, which we did last for our login pages
+     */
+    public void showLogin() {
+        if (mf != null) {
+            mf.setView(mf.makeLoginPanel(this));
+            mf.applyThemeToUI(this.theme);
+        }
+    }
+
+    public void showSignup() {
+        if (mf != null) {
+            mf.setView(new SignupPanel(this));
             mf.applyThemeToUI(this.theme);
         }
     }

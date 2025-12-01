@@ -7,6 +7,7 @@ import src.components.Updatable;
 import src.config.Theme;
 import src.controllers.AppController;
 
+
 public class MainFrame extends JFrame implements AppFrame {
 
     private DynamicPanel current;
@@ -49,6 +50,11 @@ public class MainFrame extends JFrame implements AppFrame {
     @Override
     public DynamicPanel makeCustomerPanel(){
         return new CustomerPanel();
+    }
+
+    @Override
+    public DynamicPanel makeSignupPanel(AppController appController) {
+        return new SignupPanel(appController);
     }
 
     @Override

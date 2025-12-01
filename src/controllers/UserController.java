@@ -34,18 +34,28 @@ public class UserController {
 
     /**
      * Register a new customer user with the given username and password.
+     * 
+     * Reference to CHATGPT, as we modifed this again and needed help with consistent implementation
+     * from our login and signup panel (which is called from login panel)
      */
     public loginResult registerCustomer(String username, String password) {
         try {
             User created = userCRUD.createCustomer(username, password);
             this.user = created;
-            return new loginResult(true, "Account created. You can now log in.", created);
+
+            // No need for a message here – use empty string on success.
+            return new loginResult(true, "", created);
+
         } catch (IllegalArgumentException ex) {
+            // Validation / business-rule errors from userCRUD
             return new loginResult(false, ex.getMessage(), null);
+
         } catch (RuntimeException ex) {
+            // More generic DB / system errors
             return new loginResult(false, "Could not create user: " + ex.getMessage(), null);
         }
     }
+
 
     //update user name with ownership check
     public boolean updateName(String currentUserId, String newName) {
