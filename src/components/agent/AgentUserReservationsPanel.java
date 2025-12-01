@@ -14,7 +14,6 @@ import src.controllers.AgentController;
 import src.database.ReservationCRUD;
 import src.factory.ControllerFactory;
 import src.models.Reservation;
-import src.models.ReservationStatus;
 import src.views.DynamicPanel;
 import src.views.PageController;
 
@@ -78,7 +77,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         removeButton = new JButton("Remove selected booking");
         removeButton.addActionListener(e -> removeSelectedReservation());
 
-        changeStatusButton = new JButton("Change status");
+        changeStatusButton = new JButton("Change seats");
         changeStatusButton.addActionListener(e -> changeSelectedReservationStatus());
 
         JPanel buttons = new JPanel();
@@ -197,6 +196,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
 
     private void changeSelectedReservationStatus() {
         int row = reservationTablePanel.getSelectedRowIndex();
+
         if (row < 0 || currentReservations == null || row >= currentReservations.size()) {
             JOptionPane.showMessageDialog(
                 this,
@@ -208,27 +208,58 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         }
 
         Reservation r = currentReservations.get(row);
-        ReservationStatus currentStatus = r.getStatus();
-        ReservationStatus[] options = ReservationStatus.values();
 
-        ReservationStatus newStatus = (ReservationStatus) JOptionPane.showInputDialog(
+        String input = JOptionPane.showInputDialog(
             this,
-            "Select a new status for reservation " + r.getReservationId() + ":",
-            "Change reservation status",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            options,
-            currentStatus
+            "Enter new seat count for reservation " + r.getReservationId() + ":",
+            Integer.toString(r.getSeats())
         );
 
-        if (newStatus == null || newStatus == currentStatus) {
-            return; // cancelled or unchanged
+        if (input == null) {
+            return; // user cancelled
+        }
+
+        int newSeats;
+        try {
+            newSeats = Integer.parseInt(input.trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Seats must be a valid positive number.",
+                "Invalid seats",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        if (newSeats <= 0) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Seats must be at least 1.",
+                "Invalid seats",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
         }
 
         try {
-            agentController.changeReservationStatus(r.getReservationId(), newStatus);
+            // Act on behalf of the reservation's user so that BookingController
+            // ownership checks pass while still allowing the agent to perform the change.
+            agentController.updateReservationSeats(
+                r.getReservationId(),
+                newSeats,
+                r.getUser()
+            );
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Reservation seat count updated successfully.",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
             refreshData();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             JOptionPane.showMessageDialog(
                 this,
                 ex.getMessage(),
@@ -238,7 +269,7 @@ public class AgentUserReservationsPanel extends DynamicPanel {
         } catch (RuntimeException ex) {
             JOptionPane.showMessageDialog(
                 this,
-                "Error while updating reservation status: " + ex.getMessage(),
+                "Error while updating reservation seats: " + ex.getMessage(),
                 "Error",
                 JOptionPane.ERROR_MESSAGE
             );
