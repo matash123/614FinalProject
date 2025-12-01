@@ -28,11 +28,13 @@ public class AdminFlightController {
     public Flight createOrUpdateFlight(String flightId, Airline airline,Airplane airplane, String origin,String destination,LocalDate date, double price) {
 
         //basic checks to ensure that constructor is properly filled out, I think this is imp, especially when working with a real flight. FLIGHT AGENT shouldnt be able to make mistakes (grave consequences)
-        if (flightId == null || flightId.isBlank()) {
-            throw new IllegalArgumentException("flightId is required");
-        }
         if (airline == null) {
             throw new IllegalArgumentException("airline is required");
+        }
+
+        // If no ID was provided (creating a brand new flight), generate a unique one.
+        if (flightId == null || flightId.isBlank()) {
+            flightId = generateFlightId(airline, date);
         }
         if (airplane == null) {
             throw new IllegalArgumentException("airplane is required");
@@ -52,8 +54,7 @@ public class AdminFlightController {
 
         // Flight constructor
         // and uses airplane.getCapacity() for total/available seats.
-        Flight flight = new Flight(flightId,airline,origin,destination,date,airplane,price
-        );
+        Flight flight = new Flight(flightId,airline,origin,destination,date,airplane,price);
 
         //saving using FlightCrud
         FlightCrud.addFlight(flight);
@@ -63,6 +64,24 @@ public class AdminFlightController {
         ControllerBus.getInstance().publish(ControllerBus.EventType.FLIGHTS_LOADED, List.of(flight));
 
         return flight;
+    }
+
+    /**
+     * Generate a reasonably unique flight ID based on airline and date.
+     * The exact format is not user-facing and is intended for internal use.
+     */
+    private String generateFlightId(Airline airline, LocalDate date) {
+        StringBuilder sb = new StringBuilder();
+        if (airline != null && airline.getAirlineId() != null && !airline.getAirlineId().isBlank()) {
+            sb.append(airline.getAirlineId());
+        } else {
+            sb.append("FL");
+        }
+        if (date != null) {
+            sb.append(date.toString().replace("-", ""));
+        }
+        sb.append("-").append(System.currentTimeMillis());
+        return sb.toString();
     }
 
     public void cancelFlight(String flightId) {

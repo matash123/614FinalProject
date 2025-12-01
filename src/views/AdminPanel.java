@@ -65,6 +65,7 @@ public class AdminPanel extends DynamicPanel {
         buttonsPanel.setOpaque(false);
         JButton flightSearchButton = new JButton("Flight Search");
         JButton promotionsButton = new JButton("Promotions / News");
+        JButton newFlightButton = new JButton("New Flight");
 
         flightSearchButton.addActionListener(e -> showFlightSearch());
         promotionsButton.addActionListener(e -> {
@@ -72,9 +73,19 @@ public class AdminPanel extends DynamicPanel {
             editor.setPageController(pageController);
             setActiveView(editor);
         });
+        newFlightButton.addActionListener(e -> {
+            // Open a blank flight editor; when done, return to the search view.
+            AdminFlightEditorPanel editor = new AdminFlightEditorPanel(
+                null,
+                this::showFlightSearch
+            );
+            editor.setPageController(pageController);
+            setActiveView(editor);
+        });
 
         buttonsPanel.add(flightSearchButton);
         buttonsPanel.add(promotionsButton);
+        buttonsPanel.add(newFlightButton);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setOpaque(false);

@@ -55,12 +55,12 @@ public static final Theme LIGHT = new Theme(
 public static final Theme DARK = new Theme(
     "DARK",
     new Color(32,32,32),        // bg
-    new Color(230,230,230),     // fg
+    new Color(245,245,245),     // fg (slightly brighter for better contrast)
     new Color(55,55,55),        // inputBg
-    new Color(230,230,230),     // inputFg
+    new Color(245,245,245),     // inputFg (brighter text in inputs)
 
     new Color(70,70,70),        // buttonBg  (soft dark grey)
-    new Color(230,230,230),     // buttonFg  (light text)
+    new Color(250,250,250),     // buttonFg  (very light text for clarity)
 
     new Color(255,80,80)        // errorFg
 );

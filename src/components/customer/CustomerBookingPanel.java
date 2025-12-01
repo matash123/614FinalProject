@@ -76,6 +76,8 @@ public class CustomerBookingPanel extends DynamicPanel {
 
     private void buildHeader() {
         JPanel header = new JPanel(new BorderLayout());
+        // Let the parent panel's themed background show through.
+        header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
 
         titleLabel = new JLabel("Confirm your booking", JLabel.LEFT);
@@ -103,6 +105,8 @@ public class CustomerBookingPanel extends DynamicPanel {
 
     private void buildForm(Runnable onBackToSearch) {
         JPanel form = new JPanel(new GridBagLayout());
+        // Transparent so the top-level themed background is used in both light and dark modes.
+        form.setOpaque(false);
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(8, 8, 8, 8);
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -134,6 +138,7 @@ public class CustomerBookingPanel extends DynamicPanel {
 
         // Promotion field and apply button
         JPanel promoPanel = new JPanel(new BorderLayout());
+        promoPanel.setOpaque(false);
         promoPanel.add(promotionIdField, BorderLayout.CENTER);
         promoPanel.add(applyPromoButton, BorderLayout.EAST);
         c.gridx = 1; c.gridy = 1;

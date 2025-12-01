@@ -1,6 +1,8 @@
 package src.components;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -100,6 +102,8 @@ public class AccountEditorPanel extends DynamicPanel {
 
     private void buildHeader() {
         JPanel header = new JPanel(new BorderLayout());
+        // Allow the themed parent background to show through for both light and dark modes.
+        header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
 
         String titleText = (mode == Mode.SELF)
@@ -128,6 +132,8 @@ public class AccountEditorPanel extends DynamicPanel {
 
     private void buildForm() {
         JPanel form = new JPanel(new GridBagLayout());
+        // Transparent so the surrounding themed panel controls the background color.
+        form.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 4, 4, 4);
         gbc.anchor = GridBagConstraints.WEST;
@@ -212,6 +218,7 @@ public class AccountEditorPanel extends DynamicPanel {
 
     private void buildActions() {
         JPanel actions = new JPanel();
+        actions.setOpaque(false);
 
         saveButton = new JButton("Save profile");
         saveButton.addActionListener(e -> saveProfile());
@@ -267,7 +274,22 @@ public class AccountEditorPanel extends DynamicPanel {
             b.setForeground(t.buttonFg);
         }
 
+        // Ensure all labels in this panel use the themed foreground color,
+        // including the header title and field labels.
+        applyThemeToLabels(this, t);
+
         repaint();
+    }
+
+    private void applyThemeToLabels(Container root, Theme t) {
+        for (Component c : root.getComponents()) {
+            if (c instanceof JLabel lbl) {
+                lbl.setForeground(t.fg);
+            }
+            if (c instanceof Container child) {
+                applyThemeToLabels(child, t);
+            }
+        }
     }
 
     @Override
