@@ -45,7 +45,8 @@ public class ReservationCRUD {
             
             System.out.println("reservation stmt: " + stmt);
             DB.update(stmt);
-
+            System.out.println("Query from saveReservation in reservationCRUD:" + stmt);
+                        
         } catch (RuntimeException e) {
             System.err.println("Error saving reservation: " + e.getMessage());
             throw e;

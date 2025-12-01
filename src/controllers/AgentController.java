@@ -5,8 +5,8 @@ import src.database.FlightCrud;
 import src.database.ReservationCRUD;
 import src.events.ControllerBus;
 import src.events.ControllerBus.EventType;
+import src.factory.ControllerFactory;
 import src.models.Flight;
-import src.models.Reservation;
 import src.models.ReservationStatus;
 import src.models.User;
 
@@ -78,6 +78,14 @@ public class AgentController {
         //todo implement - would need to cancel old reservation and create new one
         //for now return false as placeholder
         return false;
+    }
+
+
+    public void updateReservationSeats(String reservationId, int newSeats, User actor) {
+        ControllerFactory
+            .getInstance()
+            .booking()
+            .updateReservationSeats(reservationId, newSeats, actor);
     }
 }
 
