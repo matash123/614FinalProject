@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.math.BigDecimal;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -12,10 +13,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import src.config.Theme;
 import src.controllers.BookingController;
+import src.controllers.PromotionController;
 import src.controllers.UserController;
 import src.factory.ControllerFactory;
 import src.models.Flight;
+import src.models.Promotion;
 import src.models.User;
+import src.strategies.DefaultPricingStrategy;
+import src.strategies.PricingStrategy;
+import src.strategies.PromoPricingDecorator;
 import src.views.DynamicPanel;
 import src.views.PageController;
 
@@ -31,15 +37,20 @@ public class CustomerBookingPanel extends DynamicPanel {
 
     private final BookingController bookingController;
     private final UserController userController;
+    private final PromotionController promotionController;
     private final Flight flight;
     private final Runnable onBackToSearch;
     private PageController pageController;
+    private double currentPrice;
 
     private JLabel titleLabel;
     private JLabel flightSummaryLabel;
+    private JLabel priceLabel;
     private JTextField cardField;
+    private JTextField promotionIdField;
     private JButton confirmButton;
     private JButton backButton;
+    private JButton applyPromoButton;
 
     /**
      * @param flight the selected flight to book; assumed non-null.
@@ -49,6 +60,8 @@ public class CustomerBookingPanel extends DynamicPanel {
         this.onBackToSearch = onBackToSearch;
         this.bookingController = ControllerFactory.getInstance().booking();
         this.userController = ControllerFactory.getInstance().user();
+        this.promotionController = ControllerFactory.getInstance().promotions();
+        this.currentPrice = flight.getPrice();
 
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
@@ -68,18 +81,22 @@ public class CustomerBookingPanel extends DynamicPanel {
         titleLabel = new JLabel("Confirm your booking", JLabel.LEFT);
         flightSummaryLabel = new JLabel(
             String.format(
-                "%s → %s on %s | %s | $%.2f",
+                "%s → %s on %s | %s",
                 flight.getOrigin(),
                 flight.getDestination(),
                 flight.getDate() != null ? flight.getDate().toString() : "",
-                flight.getAirline() != null ? flight.getAirline().getName() : "",
-                flight.getPrice()
+                flight.getAirline() != null ? flight.getAirline().getName() : ""
             ),
+            JLabel.LEFT
+        );
+        priceLabel = new JLabel(
+            String.format("Price: $%.2f", currentPrice),
             JLabel.LEFT
         );
 
         header.add(titleLabel, BorderLayout.NORTH);
-        header.add(flightSummaryLabel, BorderLayout.SOUTH);
+        header.add(flightSummaryLabel, BorderLayout.CENTER);
+        header.add(priceLabel, BorderLayout.SOUTH);
 
         add(header, BorderLayout.NORTH);
     }
@@ -93,8 +110,12 @@ public class CustomerBookingPanel extends DynamicPanel {
         JLabel cardLabel = new JLabel("Card number:");
         cardField = new JTextField();
 
+        JLabel promoLabel = new JLabel("Promotion ID (optional):");
+        promotionIdField = new JTextField();
+
         confirmButton = new JButton("Pay & Book");
         backButton = new JButton("Back to search");
+        applyPromoButton = new JButton("Apply Promotion");
 
         // Card label
         c.gridx = 0; c.gridy = 0;
@@ -106,13 +127,26 @@ public class CustomerBookingPanel extends DynamicPanel {
         c.weightx = 1.0;
         form.add(cardField, c);
 
-        // Confirm button
+        // Promotion label
         c.gridx = 0; c.gridy = 1;
+        c.weightx = 0;
+        form.add(promoLabel, c);
+
+        // Promotion field and apply button
+        JPanel promoPanel = new JPanel(new BorderLayout());
+        promoPanel.add(promotionIdField, BorderLayout.CENTER);
+        promoPanel.add(applyPromoButton, BorderLayout.EAST);
+        c.gridx = 1; c.gridy = 1;
+        c.weightx = 1.0;
+        form.add(promoPanel, c);
+
+        // Confirm button
+        c.gridx = 0; c.gridy = 2;
         c.weightx = 0;
         form.add(confirmButton, c);
 
         // Back button
-        c.gridx = 1; c.gridy = 1;
+        c.gridx = 1; c.gridy = 2;
         c.weightx = 0;
         form.add(backButton, c);
 
@@ -122,6 +156,7 @@ public class CustomerBookingPanel extends DynamicPanel {
                 onBackToSearch.run();
             }
         });
+        applyPromoButton.addActionListener(e -> handleApplyPromotion());
 
         add(form, BorderLayout.CENTER);
     }
@@ -164,8 +199,14 @@ public class CustomerBookingPanel extends DynamicPanel {
             // For now we always book 1 seat; this can be extended later.
             int seats = 1;
 
-            // The BookingController already coordinates payment via AppContext's gateway.
-            boolean ok = bookingController.confirmBooking(cardNumber, flight, currentUser, seats);
+            // Get promotion ID if entered
+            String promoId = promotionIdField.getText().trim();
+            if (promoId.isBlank()) {
+                promoId = null;
+            }
+
+            // The BookingController coordinates payment processing.
+            boolean ok = bookingController.confirmBooking(cardNumber, flight, currentUser, seats, promoId);
             if (ok) {
                 JOptionPane.showMessageDialog(
                     this,
@@ -195,6 +236,57 @@ public class CustomerBookingPanel extends DynamicPanel {
         }
     }
 
+    private void handleApplyPromotion() {
+        String promoId = promotionIdField.getText().trim();
+        if (promoId.isBlank()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Please enter a promotion ID.",
+                "Missing promotion ID",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            Promotion promo = promotionController.validateAndGetActivePromotion(promoId);
+            if (promo == null) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid or inactive promotion ID. Please check and try again.",
+                    "Invalid Promotion",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            // Apply discount from promotion
+            double discountPct = promo.getDiscountPercent();
+            int discountPercentInt = (int)(discountPct * 100);
+            PricingStrategy basePricing = new DefaultPricingStrategy();
+            PricingStrategy promoPricing = new PromoPricingDecorator(basePricing, BigDecimal.valueOf(discountPct));
+            BigDecimal discountedPrice = promoPricing.priceFor(flight, 1);
+            currentPrice = discountedPrice.doubleValue();
+
+            priceLabel.setText(String.format("Price: $%.2f (Promotion: %s applied - %d%% off)", 
+                currentPrice, promo.getTitle(), discountPercentInt));
+            
+            JOptionPane.showMessageDialog(
+                this,
+                String.format("Promotion '%s' applied! New price: $%.2f", promo.getTitle(), currentPrice),
+                "Promotion Applied",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Error applying promotion: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
     @Override
     public void refreshTheme(Theme t) {
         setBackground(t.bg);
@@ -205,9 +297,20 @@ public class CustomerBookingPanel extends DynamicPanel {
         if (flightSummaryLabel != null) {
             flightSummaryLabel.setForeground(t.fg);
         }
+        if (priceLabel != null) {
+            priceLabel.setForeground(t.fg);
+        }
         if (cardField != null) {
             cardField.setBackground(t.inputBg);
             cardField.setForeground(t.inputFg);
+        }
+        if (promotionIdField != null) {
+            promotionIdField.setBackground(t.inputBg);
+            promotionIdField.setForeground(t.inputFg);
+        }
+        if (applyPromoButton != null) {
+            applyPromoButton.setBackground(t.buttonBg);
+            applyPromoButton.setForeground(t.buttonFg);
         }
         if (confirmButton != null) {
             confirmButton.setBackground(t.buttonBg);
