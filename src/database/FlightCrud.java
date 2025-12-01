@@ -325,5 +325,63 @@ public class FlightCrud {
             throw e;
         }
     }
+
+
+    //LAST FUNCTIONS ADDED, we noticed that we never actualy during testing had the true connection and pulling
+    //from database to ensure flight availability is updated and so forther
+    //even though we had the testers -> this was problematic for sure as we couldnt actually update seats available
+    //despiet having some of the approrpriate getters and setters done and to do so
+
+    //After a ton of debugging - I made a bunch of mistakes with the help of chatGPt realized the best to do
+    //would be to have increment and decrement seast heres as database connections and writing and then
+    //call the appropriate method in BOOKING CONTROLLER afer the we have already wrote save reservation to the reservationCRUD
+
+    //Here are the functions below with a direct reference to : CHATGPT for pseudo code and implementation of properly writing these
+
+    //This is for a saving reservation in Bokking Controller
+    public static boolean decrementAvailableSeats(String flightId, int seats) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId is required");
+        }
+        if (seats <= 0) {
+            throw new IllegalArgumentException("seats must be positive");
+        }
+
+        String sql =
+            "UPDATE flight " +
+            "SET available_seats = available_seats - ? " +
+            "WHERE flight_id = ? AND available_seats >= ?";
+
+        PreparedStatement stmt = DB.prepare(sql);
+        // DB.set works with strings; SQLite will coerce them to INTEGER.
+        DB.set(stmt, 1, Integer.toString(seats));
+        DB.set(stmt, 2, flightId.trim());
+        DB.set(stmt, 3, Integer.toString(seats));
+
+        int updated = DB.update(stmt);
+        return updated == 1;
+    }
+
+    //This is for booking controller for a cencel reservation.
+    public static boolean incrementAvailableSeats(String flightId, int seats) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId is required");
+        }
+        if (seats <= 0) {
+            throw new IllegalArgumentException("seats must be positive");
+        }
+
+        String sql =
+            "UPDATE flight " +
+            "SET available_seats = MIN(total_seats, available_seats + ?) " +
+            "WHERE flight_id = ?";
+
+        PreparedStatement stmt = DB.prepare(sql);
+        DB.set(stmt, 1, Integer.toString(seats));
+        DB.set(stmt, 2, flightId.trim());
+
+        int updated = DB.update(stmt);
+        return updated == 1;
+    }
 }
 

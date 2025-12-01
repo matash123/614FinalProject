@@ -2,6 +2,8 @@ package src.controllers;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import src.database.FlightCrud;
 import src.database.PaymentCRUD;
 import src.database.ReservationCRUD;
 import src.models.Customer;
@@ -107,6 +109,14 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
     // Save reservation directly via CRUD
     System.out.println("Saving reservation");
     ReservationCRUD.saveReservation(reservation);
+
+    //VERY LAST ADDITION - had to fix update missed this and doing so after updating FlightCRUD
+    //we want to decrement Available Seats
+
+    boolean seatUpdated = FlightCrud.decrementAvailableSeats(f.getFlightId(), seats);
+    if (!seatUpdated) {
+        System.err.println("Warning: seat update failed for flight " + f.getFlightId());
+    }
 
     // Now we can create and save payment
     String paymentId = "P" + System.currentTimeMillis();
@@ -217,6 +227,20 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
         }
 
         ReservationCRUD.updateStatus(reservationId, ReservationStatus.CANCELLED);
+
+        //SAME THING VERY LAST ADDITION TO CODE, now that we updated Status as cancelled, we can give back the space
+        //and use our incrementAvailableSeats
+
+        //Reference to ChatGPT for much and grateful help with this (we were stuck along time)
+        //need to get the flight info exactly from this object
+        Flight flight = existing.getFlight();
+        int seats     = existing.getSeats();
+
+        //now actually applying the update with a check
+        boolean seatUpdated = FlightCrud.incrementAvailableSeats(flight.getFlightId(), seats);
+        if (!seatUpdated) {
+            System.err.println("Warning: seat restore failed for flight " + flight.getFlightId());
+        }
 
         AppController app = AppController.getInstance();
         if (app != null) {
