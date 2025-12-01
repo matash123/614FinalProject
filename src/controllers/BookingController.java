@@ -1,13 +1,17 @@
 package src.controllers;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import src.database.FlightCrud;
 import src.database.PaymentCRUD;
 import src.database.ReservationCRUD;
+import src.factory.ControllerFactory;
 import src.models.Customer;
 import src.models.Flight;
 import src.models.Payment;
 import src.models.PaymentStatus;
+import src.models.Promotion;
 import src.models.Reservation;
 import src.models.ReservationStatus;
 import src.models.User;
@@ -16,6 +20,7 @@ import src.payment.SimulatedPaymentGateway;
 import src.strategies.BestAvailableSeatStrategy;
 import src.strategies.DefaultPricingStrategy;
 import src.strategies.PricingStrategy;
+import src.strategies.PromoPricingDecorator;
 import src.strategies.SeatSelectionStrategy;
 
 //handles booking logic
@@ -60,6 +65,10 @@ public class BookingController {
  * */
 
 public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
+    return confirmBooking(cardToken, f, u, seats, null);
+}
+
+public boolean confirmBooking(String cardToken, Flight f, User u, int seats, String promotionId){
     // Again basic validatoo
     if (f == null || u == null) {
         throw new IllegalArgumentException("Flight and user are required");
@@ -73,8 +82,22 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
         throw new IllegalStateException("Not enough seats available on this flight");
     }
 
-    // 2) Calculate the total price
-    double totalAmount = f.getPrice() * seats;
+    // 2) Calculate the total price with optional promotion discount
+    PricingStrategy basePricing = new DefaultPricingStrategy();
+    BigDecimal discountPercent = BigDecimal.ZERO;
+    
+    // Check if promotion ID is provided and valid
+    if (promotionId != null && !promotionId.isBlank()) {
+        Promotion promo = ControllerFactory.getInstance().promotions().validateAndGetActivePromotion(promotionId);
+        if (promo != null) {
+            // Use the discount percentage from the promotion
+            discountPercent = BigDecimal.valueOf(promo.getDiscountPercent());
+        }
+    }
+    
+    PricingStrategy finalPricing = new PromoPricingDecorator(basePricing, discountPercent);
+    BigDecimal totalAmountBigDecimal = finalPricing.priceFor(f, seats);
+    double totalAmount = totalAmountBigDecimal.doubleValue();
 
     // Reserve seats in memory, we dont need to write to database yet
     f.reserveSeats(seats);
@@ -107,6 +130,14 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
     // Save reservation directly via CRUD
     System.out.println("Saving reservation");
     ReservationCRUD.saveReservation(reservation);
+
+    //VERY LAST ADDITION - had to fix update missed this and doing so after updating FlightCRUD
+    //we want to decrement Available Seats
+
+    boolean seatUpdated = FlightCrud.decrementAvailableSeats(f.getFlightId(), seats);
+    if (!seatUpdated) {
+        System.err.println("Warning: seat update failed for flight " + f.getFlightId());
+    }
 
     // Now we can create and save payment
     String paymentId = "P" + System.currentTimeMillis();
@@ -217,6 +248,20 @@ public boolean confirmBooking(String cardToken, Flight f, User u, int seats){
         }
 
         ReservationCRUD.updateStatus(reservationId, ReservationStatus.CANCELLED);
+
+        //SAME THING VERY LAST ADDITION TO CODE, now that we updated Status as cancelled, we can give back the space
+        //and use our incrementAvailableSeats
+
+        //Reference to ChatGPT for much and grateful help with this (we were stuck along time)
+        //need to get the flight info exactly from this object
+        Flight flight = existing.getFlight();
+        int seats     = existing.getSeats();
+
+        //now actually applying the update with a check
+        boolean seatUpdated = FlightCrud.incrementAvailableSeats(flight.getFlightId(), seats);
+        if (!seatUpdated) {
+            System.err.println("Warning: seat restore failed for flight " + flight.getFlightId());
+        }
 
         AppController app = AppController.getInstance();
         if (app != null) {

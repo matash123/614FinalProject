@@ -6,14 +6,12 @@ import src.components.AccountEditorPanel;
 import src.components.ThemeAware;
 import src.components.UserBox;
 import src.components.customer.CustomerBookingPanel;
-import src.components.customer.CustomerPromotionDetailsPanel;
+import src.components.customer.CustomerPromotionsPanel;
 import src.components.customer.CustomerReservationsPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
-import src.controllers.PromotionController;
 import src.factory.ControllerFactory;
 import src.models.Flight;
-import src.models.Promotion;
 import src.models.User;
 
 
@@ -29,8 +27,6 @@ public class CustomerPanel extends DynamicPanel {
     private JPanel headerPanel;
     private UserBox userBox;
     private CustomerReservationsPanel reservationsPanel;
-    private JButton latestPromoButton;
-    private JComboBox<Promotion> promoDropdown;
 
     private JPanel activeArea;
 
@@ -40,13 +36,10 @@ public class CustomerPanel extends DynamicPanel {
     // Page controller for switching the active center panel.
     private final PageController pageController;
 
-    private final PromotionController promotionController;
-
     public CustomerPanel() {
         setLayout(new BorderLayout());
 
         this.pageController = panel -> setActiveView(panel);
-        this.promotionController = ControllerFactory.getInstance().promotions();
 
         buildHeader();
         buildActiveArea();
@@ -76,6 +69,10 @@ public class CustomerPanel extends DynamicPanel {
         flightSearchButton.addActionListener(e -> showFlightSearch());
         buttonsPanel.add(flightSearchButton);
 
+        JButton promotionsButton = new JButton("Promotions");
+        promotionsButton.addActionListener(e -> showPromotions());
+        buttonsPanel.add(promotionsButton);
+
         JButton accountButton = new JButton("My Account");
         accountButton.addActionListener(e -> {
             AccountEditorPanel panel = new AccountEditorPanel(AccountEditorPanel.Mode.SELF);
@@ -89,43 +86,7 @@ public class CustomerPanel extends DynamicPanel {
         leftPanel.add(userBox, BorderLayout.CENTER);
         leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
-        // Center header: promotional news
-        JPanel promoPanel = new JPanel();
-        promoPanel.setOpaque(false);
-
-        JLabel promoLabel = new JLabel("Latest promotion:");
-        latestPromoButton = new JButton("No current promotions");
-        latestPromoButton.setEnabled(false);
-
-        JLabel allLabel = new JLabel("All active promos:");
-        promoDropdown = new JComboBox<>();
-        promoDropdown.setEnabled(false);
-
-        promoPanel.add(promoLabel);
-        promoPanel.add(latestPromoButton);
-        promoPanel.add(allLabel);
-        promoPanel.add(promoDropdown);
-
-        // Wire actions for promotions
-        latestPromoButton.addActionListener(e -> {
-            Promotion selected = (Promotion) promoDropdown.getSelectedItem();
-            if (selected == null) {
-                selected = promotionController.getMostRecentActivePromotion();
-            }
-            if (selected != null) {
-                showPromotionDetails(selected);
-            }
-        });
-
-        promoDropdown.addActionListener(e -> {
-            Promotion selected = (Promotion) promoDropdown.getSelectedItem();
-            if (selected != null) {
-                showPromotionDetails(selected);
-            }
-        });
-
         headerPanel.add(leftPanel, BorderLayout.WEST);
-        headerPanel.add(promoPanel, BorderLayout.CENTER);
         headerPanel.add(reservationsPanel, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
@@ -188,6 +149,13 @@ public class CustomerPanel extends DynamicPanel {
         setActiveView(getOrCreateFlightSearchPanel());
     }
 
+    /** Show the promotions panel. */
+    public void showPromotions() {
+        CustomerPromotionsPanel promotionsPanel = new CustomerPromotionsPanel();
+        promotionsPanel.setPageController(pageController);
+        setActiveView(promotionsPanel);
+    }
+
     // -------------------------------------------------------------
     // DYNAMIC UPDATE METHODS
     // -------------------------------------------------------------
@@ -223,14 +191,6 @@ public class CustomerPanel extends DynamicPanel {
         // Refresh header components
         if (userBox instanceof ThemeAware ta1) ta1.refreshTheme(t);
         if (reservationsPanel instanceof ThemeAware ta2) ta2.refreshTheme(t);
-        if (latestPromoButton != null) {
-            latestPromoButton.setBackground(t.buttonBg);
-            latestPromoButton.setForeground(t.buttonFg);
-        }
-        if (promoDropdown != null) {
-            promoDropdown.setBackground(t.inputBg);
-            promoDropdown.setForeground(t.inputFg);
-        }
 
         // Refresh active component inside activeArea
         if (activeArea.getComponentCount() > 0) {
@@ -261,55 +221,5 @@ public class CustomerPanel extends DynamicPanel {
         if (reservationsPanel != null) {
             reservationsPanel.refreshData();
         }
-
-        refreshPromotionsHeader();
-    }
-
-    private void refreshPromotionsHeader() {
-        if (promotionController == null || latestPromoButton == null || promoDropdown == null) {
-            return;
-        }
-
-        java.util.List<Promotion> activePromos = promotionController.getActivePromotions();
-
-        promoDropdown.removeAllItems();
-
-        if (activePromos.isEmpty()) {
-            latestPromoButton.setText("No current promotions");
-            latestPromoButton.setEnabled(false);
-            promoDropdown.setEnabled(false);
-            return;
-        }
-
-        for (Promotion p : activePromos) {
-            promoDropdown.addItem(p);
-        }
-
-        Promotion latest = promotionController.getMostRecentActivePromotion();
-        if (latest != null) {
-            latestPromoButton.setText(latest.getTitle());
-            latestPromoButton.setEnabled(true);
-            promoDropdown.setSelectedItem(latest);
-            promoDropdown.setEnabled(true);
-        } else {
-            latestPromoButton.setText("No current promotions");
-            latestPromoButton.setEnabled(false);
-            promoDropdown.setEnabled(false);
-        }
-    }
-
-    private void showPromotionDetails(Promotion promotion) {
-        if (promotion == null) {
-            JOptionPane.showMessageDialog(
-                this,
-                "No promotion selected.",
-                "No promotion",
-                JOptionPane.INFORMATION_MESSAGE
-            );
-            return;
-        }
-
-        CustomerPromotionDetailsPanel panel = new CustomerPromotionDetailsPanel(promotion);
-        setActiveView(panel);
     }
 }

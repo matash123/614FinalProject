@@ -74,6 +74,8 @@ public class CustomerReservationEditor extends DynamicPanel {
 
     private void buildHeader() {
         JPanel header = new JPanel(new BorderLayout());
+        // Let the themed parent background show through (avoids bright boxes in dark mode).
+        header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
 
         titleLabel = new JLabel("Edit reservation", JLabel.LEFT);
@@ -109,6 +111,8 @@ public class CustomerReservationEditor extends DynamicPanel {
 
     private void buildForm() {
         JPanel form = new JPanel(new GridBagLayout());
+        // Transparent so the surrounding themed panel controls the background color.
+        form.setOpaque(false);
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(8, 8, 8, 8);
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -133,6 +137,8 @@ public class CustomerReservationEditor extends DynamicPanel {
 
     private void buildActions() {
         JPanel actions = new JPanel();
+        // Match the themed background instead of default bright panel color.
+        actions.setOpaque(false);
 
         saveButton = new JButton("Save changes");
         cancelReservationButton = new JButton("Cancel reservation");

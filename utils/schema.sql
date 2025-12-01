@@ -99,11 +99,12 @@ CREATE TABLE payment (
 
 -- Promotions (monthly news)
 CREATE TABLE promotion (
-    promotion_id TEXT PRIMARY KEY,     -- ↔ Promotion.promotionId
-    title        TEXT NOT NULL,        -- ↔ Promotion.title
-    message      TEXT NOT NULL,        -- ↔ Promotion.message
-    start_date   TEXT NOT NULL,        -- ↔ Promotion.startDate
-    end_date     TEXT NOT NULL         -- ↔ Promotion.endDate
+    promotion_id TEXT PRIMARY KEY,     
+    title        TEXT NOT NULL,        
+    message      TEXT NOT NULL,        
+    start_date   TEXT NOT NULL,       
+    end_date     TEXT NOT NULL,     
+    discount_percent REAL NOT NULL DEFAULT 0.0 
 );
 
 CREATE TABLE airplane (
@@ -169,8 +170,9 @@ INSERT INTO payment (payment_id, reservation_id, amount, status, timestamp, cred
 ('P002', 'R002', 249.50, 'paid',  '2025-11-02T11:35:00', '5555 4444 3333 1111');
 
 -- Promotions
-INSERT INTO promotion (promotion_id, title, message, start_date, end_date) VALUES
-('PR001', 'Winter Sale', '20% off selected flights', '2025-11-01', '2025-12-31');
+INSERT INTO promotion (promotion_id, title, message, start_date, end_date, discount_percent) VALUES
+('PR001', 'Winter Sale', '20% off all flights this November', '2025-11-01', '2025-11-30', 0.20),
+('PR002', 'Christmas Sale', '10% off all flights this December', '2025-12-01', '2025-12-31', 0.10);
 
 
 

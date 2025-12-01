@@ -232,7 +232,7 @@ public class FlightSearchPanel extends DynamicPanel {
     // ------------------------------------------------------------
     private void updateTableFromFlights(List<Flight> flights) {
         currentFlights = new ArrayList<>(flights);
-        String[] cols = { "Origin", "Destination", "Date", "Airline", "Price" };
+        String[] cols = { "Origin", "Destination", "Date", "Airline", "Available seats", "Price" };
 
         String[][] data = new String[currentFlights.size()][cols.length];
         for (int i = 0; i < currentFlights.size(); i++) {
@@ -241,7 +241,8 @@ public class FlightSearchPanel extends DynamicPanel {
             data[i][1] = f.getDestination();
             data[i][2] = (f.getDate() != null) ? f.getDate().toString() : "";
             data[i][3] = (f.getAirline() != null) ? f.getAirline().getName() : "";
-            data[i][4] = String.format("$%.2f", f.getPrice());
+            data[i][4] = Integer.toString(f.getAvailableSeats());
+            data[i][5] = String.format("$%.2f", f.getPrice());
         }
 
         var model = new javax.swing.table.DefaultTableModel(data, cols) {

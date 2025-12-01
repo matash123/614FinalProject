@@ -39,6 +39,8 @@ public class FlightCrud {
                     "  airplane.model        AS airplane_model, " +
                     "  airplane.manufacturer AS airplane_manufacturer, " +
                     "  airplane.capacity     AS airplane_capacity, " +
+                    "  flight.total_seats    AS total_seats, " +
+                    "  flight.available_seats AS available_seats, " +
                     "  flight.price          AS price " +
                     "FROM flight " +
                     "JOIN airline  ON flight.airline_id  = airline.airline_id " +
@@ -94,6 +96,8 @@ public class FlightCrud {
                 String airplaneModel = DB.getString(rs, "airplane_model");
                 String airplaneMfg = DB.getString(rs, "airplane_manufacturer");
                 String airplaneCapacityString = DB.getString(rs, "airplane_capacity"); //changed this to string so we can stor ethe actuall parsed version as the true name airplane_Capacity
+                String totalSeatsStr = DB.getString(rs, "total_seats");
+                String availableSeatsStr = DB.getString(rs, "available_seats");
 
                 String priceStr = DB.getString(rs, "price");
 
@@ -124,6 +128,28 @@ public class FlightCrud {
                     }
                 }
 
+                // Prefer the explicit total_seats column if present; otherwise fall back
+                // to airplane capacity. This does NOT affect available seats.
+                int totalSeats = airplaneCapacity;
+                if (totalSeatsStr != null && !totalSeatsStr.isBlank()) {
+                    try {
+                        totalSeats = Integer.parseInt(totalSeatsStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // Available seats should be driven directly by the database column.
+                // Only if the column is missing/blank do we fall back to totalSeats.
+                int availableSeats = 0;
+                if (availableSeatsStr != null && !availableSeatsStr.isBlank()) {
+                    try {
+                        availableSeats = Integer.parseInt(availableSeatsStr);
+                    } catch (NumberFormatException ignored) {
+                        availableSeats = 0;
+                    }
+                } else {
+                    availableSeats = totalSeats;
+                }
+
 
                  
 
@@ -138,7 +164,8 @@ public class FlightCrud {
                     dbDestination,
                     departureDate,
                     airplane,
-                    price
+                    price,
+                    availableSeats
                 );
 
                 flights.add(f);
@@ -261,7 +288,9 @@ public class FlightCrud {
                 "  ap.model         AS airplane_model, " +
                 "  ap.manufacturer  AS airplane_manufacturer, " +
                 "  ap.capacity      AS airplane_capacity, " +
-                "  f.price          AS price " +
+                "  f.total_seats     AS total_seats, " +
+                "  f.available_seats AS available_seats, " +
+                "  f.price           AS price " +
                 "FROM flight f " +
                 "JOIN airline  a  ON f.airline_id  = a.airline_id " +
                 "JOIN airplane ap ON f.airplane_id = ap.airplane_id " +
@@ -287,6 +316,8 @@ public class FlightCrud {
             String airplaneModel    = DB.getString(rs, "airplane_model");
             String airplaneMfg      = DB.getString(rs, "airplane_manufacturer");
             String airplaneCapStr   = DB.getString(rs, "airplane_capacity");
+            String totalSeatsStr    = DB.getString(rs, "total_seats");
+            String availableStr     = DB.getString(rs, "available_seats");
             String priceStr         = DB.getString(rs, "price");
 
             double price = 0.0;
@@ -294,11 +325,23 @@ public class FlightCrud {
                 try { price = Double.parseDouble(priceStr); } catch (NumberFormatException ignored) {}
             }
 
-            //Reference to CHATGOT for this function to help, we made some mistakes with type and this is error handling
+            //Reference to CHATGPT for this function to help, we made some mistakes with type and this is error handling
             int airplaneCapacity = 0;
             if (airplaneCapStr != null && !airplaneCapStr.isBlank()) {
                 try { airplaneCapacity = Integer.parseInt(airplaneCapStr); }
                 catch (NumberFormatException ignored) { airplaneCapacity = 150; }
+            }
+
+            int totalSeats = airplaneCapacity;
+            if (totalSeatsStr != null && !totalSeatsStr.isBlank()) {
+                try { totalSeats = Integer.parseInt(totalSeatsStr); } catch (NumberFormatException ignored) {}
+            }
+
+            int availableSeats = 0;
+            if (availableStr != null && !availableStr.isBlank()) {
+                try { availableSeats = Integer.parseInt(availableStr); } catch (NumberFormatException ignored) { availableSeats = 0; }
+            } else {
+                availableSeats = totalSeats;
             }
 
             LocalDate departureDate = null;
@@ -316,7 +359,8 @@ public class FlightCrud {
                     dbDestination,
                     departureDate,
                     airplane,
-                    price
+                    price,
+                    availableSeats
             );
 
             //CHATGPT shoutout still have so much troubl implementing this without errors and helped get this going
@@ -324,6 +368,65 @@ public class FlightCrud {
             System.err.println("Error in findFlightById: " + e.getMessage());
             throw e;
         }
+    }
+
+
+    //LAST FUNCTIONS ADDED, we noticed that we never actualy during testing had the true connection and pulling
+    //from database to ensure flight availability is updated and so forther
+    //even though we had the testers -> this was problematic for sure as we couldnt actually update seats available
+    //despiet having some of the approrpriate getters and setters done and to do so
+
+    //After a ton of debugging - I made a bunch of mistakes with the help of chatGPt realized the best to do
+    //would be to have increment and decrement seast heres as database connections and writing and then
+    //call the appropriate method in BOOKING CONTROLLER afer the we have already wrote save reservation to the reservationCRUD
+
+    //Here are the functions below with a direct reference to : CHATGPT for pseudo code and implementation of properly writing these
+
+    //This is for a saving reservation in Bokking Controller
+    public static boolean decrementAvailableSeats(String flightId, int seats) {
+        System.out.println("\n\nDecrementing: " + flightId + " and " + seats);
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId is required");
+        }
+        if (seats <= 0) {
+            throw new IllegalArgumentException("seats must be positive");
+        }
+
+        String sql =
+            "UPDATE flight " +
+            "SET available_seats = available_seats - ? " +
+            "WHERE flight_id = ? AND available_seats >= ?";
+
+        PreparedStatement stmt = DB.prepare(sql);
+        // DB.set works with strings; SQLite will coerce them to INTEGER.
+        DB.set(stmt, 1, Integer.toString(seats));
+        DB.set(stmt, 2, flightId.trim());
+        DB.set(stmt, 3, Integer.toString(seats));
+        System.out.println("Decrement statement:" + stmt);
+        DB.update(stmt);
+        return true;
+    }
+
+    //This is for booking controller for a cencel reservation.
+    public static boolean incrementAvailableSeats(String flightId, int seats) {
+        if (flightId == null || flightId.isBlank()) {
+            throw new IllegalArgumentException("flightId is required");
+        }
+        if (seats <= 0) {
+            throw new IllegalArgumentException("seats must be positive");
+        }
+
+        String sql =
+            "UPDATE flight " +
+            "SET available_seats = MIN(total_seats, available_seats + ?) " +
+            "WHERE flight_id = ?";
+
+        PreparedStatement stmt = DB.prepare(sql);
+        DB.set(stmt, 1, Integer.toString(seats));
+        DB.set(stmt, 2, flightId.trim());
+
+        int updated = DB.update(stmt);
+        return updated == 1;
     }
 }
 
