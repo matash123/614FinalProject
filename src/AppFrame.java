@@ -12,6 +12,7 @@ public interface AppFrame {
     DynamicPanel makeCustomerPanel();
     DynamicPanel makeAgentPanel();
     DynamicPanel makeAdminPanel();
+    DynamicPanel makeSignupPanel(AppController appController);
 
     void applyThemeToUI(Theme t);
 
