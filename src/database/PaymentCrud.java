@@ -10,7 +10,7 @@ import src.models.Payment;
 import src.models.PaymentStatus;
 import src.models.Reservation;
 
-public class PaymentCRUD {
+public class PaymentCrud {
 
     // Reference to CHATGPT for this condiseration on a private Satic function which amp one row to a payment object
     // now its makes stromg sense conceptually.

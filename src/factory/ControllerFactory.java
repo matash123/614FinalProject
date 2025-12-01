@@ -7,6 +7,7 @@ import src.controllers.AuthController;
 import src.controllers.BookingController;
 import src.controllers.FlightSearchController;
 import src.controllers.PaymentController;
+import src.controllers.PromotionController;
 import src.controllers.UserController;
 
 //factory for creating controllers
@@ -20,6 +21,7 @@ public class ControllerFactory {
     private final AdminFlightController adminFlightController;
     private final AgentController agentController;
     private final UserController userController;
+    private final PromotionController promotionController;
     //todo add others later
 
     private ControllerFactory() {
@@ -31,6 +33,7 @@ public class ControllerFactory {
         this.adminFlightController = new AdminFlightController();
         this.agentController = new AgentController();
         this.userController = new UserController();
+        this.promotionController = new PromotionController();
         //todo init rest
     }
 
@@ -48,5 +51,6 @@ public class ControllerFactory {
     public AdminFlightController adminFlights() { return adminFlightController; }
     public AgentController agent() { return agentController; }
     public UserController user() { return userController; }
+    public PromotionController promotions() { return promotionController; }
     //todo expose others
 }

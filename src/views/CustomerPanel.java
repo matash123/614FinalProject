@@ -9,6 +9,7 @@ import src.components.ThemeAware;
 import src.components.UserBookingList;
 import src.components.UserBox;
 import src.components.customer.CustomerBookingPanel;
+import src.components.customer.CustomerPromotionsPanel;
 import src.components.customer.FlightSearchPanel;
 import src.config.Theme;
 import src.database.ReservationCRUD;
@@ -69,6 +70,10 @@ public class CustomerPanel extends DynamicPanel {
         JButton flightSearchButton = new JButton("Flight Search");
         flightSearchButton.addActionListener(e -> showFlightSearch());
         buttonsPanel.add(flightSearchButton);
+
+        JButton promotionsButton = new JButton("Promotions");
+        promotionsButton.addActionListener(e -> showPromotions());
+        buttonsPanel.add(promotionsButton);
 
         JButton accountButton = new JButton("My Account");
         accountButton.addActionListener(e -> {
@@ -144,6 +149,13 @@ public class CustomerPanel extends DynamicPanel {
     /** Convenience method to make the search view active. */
     public void showFlightSearch() {
         setActiveView(getOrCreateFlightSearchPanel());
+    }
+
+    /** Show the promotions panel. */
+    public void showPromotions() {
+        CustomerPromotionsPanel promotionsPanel = new CustomerPromotionsPanel();
+        promotionsPanel.setPageController(pageController);
+        setActiveView(promotionsPanel);
     }
 
     // -------------------------------------------------------------
