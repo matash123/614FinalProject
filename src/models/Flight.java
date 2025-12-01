@@ -50,6 +50,27 @@ public class Flight {
         this.isFull = !hasAvailableSeats();
     }
 
+    /**
+     * Alternate constructor that allows callers (typically database CRUD helpers)
+     * to override the available seat count based on persisted state.
+     */
+    public Flight(String flightId,
+                  Airline airline,
+                  String origin,
+                  String destination,
+                  LocalDate date,
+                  Airplane airplane,
+                  double price,
+                  int availableSeats) {
+        this(flightId, airline, origin, destination, date, airplane, price);
+
+        // Only override if the value is sane relative to total capacity.
+        if (availableSeats >= 0 && availableSeats <= this.totalSeats) {
+            this.availableSeats = availableSeats;
+        }
+        this.isFull = !hasAvailableSeats();
+    }
+
 
     // These need updates, this method to update whether or not a flight is full, so we can even book seats
 
