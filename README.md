@@ -17,6 +17,7 @@ There are two Options:
    - `chmod +x run.sh` -> only on git pulls and if you change the run file
    - `./run.sh`
  
+ To login as Admin use, username: admin password: 1
  
 Flight booking application prototype
 #Marley Test
