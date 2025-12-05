@@ -18,7 +18,7 @@ There are two Options:
    - `./run.sh`
  
  To login as Admin use, username: admin password: 1
- 
+ To login as Agent use, username: agent passowrd: 1
 Flight booking application prototype
 #Marley Test
 #Test Again
