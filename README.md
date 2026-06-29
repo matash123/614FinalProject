@@ -1,41 +1,93 @@
-# 614Project
+# ENSF 614 Flight Booking Application
 
-# Setup
-1. `cd {yourPath}/614Projects`
-2. init database `sqlite3 flights.db < utils/schema.sql` for windows -> `sqlite3 mydatabase.db ".read utils/schema.sql"`
-3. create ".env" file and add  "DB_PATH=flights.db" without quotations.  
+## Overview
 
-# How to run
-There are two Options:
-1. self compile and run, last correct commands are below
-   - `cd {yourPath}/614Projects`
-   -  `javac -cp utils/sqlite-jdbc.jar -d out src/*.java src/**/*.java` for windows -> `javac -cp ".;utils/sqlite-jdbc.jar" -d out src/MainApp.java`
-   -   `java -cp out:utils/sqlite-jdbc.jar src.MainApp` for windows -> java -cp "out;utils/sqlite-jdbc.jar" src.MainApp
+This repository contains a Java desktop prototype for booking and managing flights. It was built as a team project for a software engineering course.
 
-3. Use the run script (only works for linux)
-   - `cd {yourPath}/614Projects`
-   - `chmod +x run.sh` -> only on git pulls and if you change the run file
-   - `./run.sh`
- 
- To login as Admin use, username: admin password: 1
- To login as Agent use, username: agent passowrd: 1
+## Repository
 
+* GitHub profile: https://github.com/matash123
+* Project repository: https://github.com/matash123/614FinalProject
+* Original shared repository: https://github.com/barrettsapunjis/614Project
 
-Flight booking application prototype
-#Marley Test
-#Test Again
+## What this project includes
 
-### actives work
+* A Java desktop application prototype.
+* A SQLite database setup script in `utils/schema.sql`.
+* Demo login accounts for the admin and agent roles.
+* Controller work listed for Matin in the team README.
 
-#### matin
-- init work on controllers
+## Team contribution listed in the README
 
-#### marley
-- init work on classes / domain & database lead
+* Matin worked on controllers.
+* Marley worked on domain classes and the database.
+* Barrett worked on the GUI.
+* Raman worked on diagrams and overall design.
 
-#### Barrett
-- Init work on the GUI
+## Setup
 
+From the project folder, initialize the database.
 
-#### Raman
-- Managing diagrams and overall design. 
+```bash
+cd 614FinalProject
+sqlite3 flights.db < utils/schema.sql
+```
+
+On Windows, you can use this SQLite command instead.
+
+```powershell
+sqlite3 mydatabase.db ".read utils/schema.sql"
+```
+
+Create a `.env` file in the project root with this value.
+
+```text
+DB_PATH=flights.db
+```
+
+## Run the application
+
+You can compile and run the project manually.
+
+```bash
+javac -cp utils/sqlite-jdbc.jar -d out src/*.java src/**/*.java
+java -cp out:utils/sqlite-jdbc.jar src.MainApp
+```
+
+On Windows, use this command format.
+
+```powershell
+javac -cp ".;utils/sqlite-jdbc.jar" -d out src/MainApp.java
+java -cp "out;utils/sqlite-jdbc.jar" src.MainApp
+```
+
+You can also run the Linux script.
+
+```bash
+chmod +x run-linux.sh
+./run-linux.sh
+```
+
+You can also run the Windows script.
+
+```powershell
+./run-win.ps1
+```
+
+## Demo login
+
+These are test credentials for the prototype. They are not production accounts.
+
+```text
+Admin username: admin
+Admin password: 1
+
+Agent username: agent
+Agent password: 1
+```
+
+## Requirements
+
+* Java JDK.
+* SQLite.
+* SQLite JDBC jar file in the `utils` folder.
